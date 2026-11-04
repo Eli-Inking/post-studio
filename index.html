@@ -149,6 +149,30 @@ details.fold{border-top:1px solid var(--line);padding-top:8px}
 details.fold>summary{color:var(--muted);font-weight:500;cursor:pointer}
 .vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;margin-top:6px}
 .vgrid figure{margin:0}.vgrid img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:6px}.vgrid figcaption{font-size:11px;color:var(--muted)}
+/* feed: a phone-sized mock-up of his Instagram grid (4 Nov) */
+.phone{--ig:#fff;--igink:#111;--igmuted:#737373;background:var(--ig);color:var(--igink);width:100%;max-width:430px;margin:0 auto;border-radius:34px;border:8px solid #1a1a1a;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.18);height:min(900px,84vh);display:flex;flex-direction:column}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .phone{--ig:#000;--igink:#f5f5f5;--igmuted:#a8a8a8;border-color:#333}}
+:root[data-theme="dark"] .phone{--ig:#000;--igink:#f5f5f5;--igmuted:#a8a8a8;border-color:#333}
+.ph-top{padding:14px 16px 4px;font:600 17px/1.2 system-ui,sans-serif;display:flex;justify-content:space-between}
+.ph-prof{display:flex;gap:16px;align-items:center;padding:8px 16px 10px;font:13px/1.3 system-ui,sans-serif}
+.ph-av{width:76px;height:76px;border-radius:50%;flex:0 0 auto;display:grid;place-items:center;background:linear-gradient(135deg,#f6dcd6,#dbe6f5);color:#2a2420;font:600 24px Fraunces,Georgia,serif}
+.ph-stats{display:flex;gap:18px}.ph-stats b{display:block;font-size:16px;text-align:center}.ph-stats span{font-size:12px;color:var(--igmuted)}
+.ph-bio{padding:0 16px 10px;font:13px/1.35 system-ui,sans-serif}
+.ph-tabs{display:flex;border-top:1px solid rgba(128,128,128,.25)}.ph-tabs span{flex:1;text-align:center;padding:8px 0;color:var(--igmuted)}.ph-tabs .on{color:var(--igink);border-top:1px solid var(--igink);margin-top:-1px}
+.ph-scroll{flex:1;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.fgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2px}
+.ft{position:relative;min-width:0;aspect-ratio:3/4;background:#eee;overflow:hidden}
+.ft img{width:100%;height:100%;object-fit:cover;display:block;cursor:zoom-in}
+.ft .fimg{width:100%;height:100%;background-repeat:no-repeat;cursor:zoom-in}
+.ft.plan{cursor:grab;outline:2px solid var(--red);outline-offset:-2px}.ft.sched{outline:2px solid var(--blue);outline-offset:-2px}
+.ft.ghost{opacity:.35}
+.fl{position:absolute;left:3px;bottom:3px;max-width:calc(100% - 6px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:rgba(0,0,0,.62);color:#fff;font:600 9px/1.2 system-ui,sans-serif;padding:2px 5px;border-radius:5px;pointer-events:none}
+.fl.dim{background:rgba(0,0,0,.4);font-weight:400}
+.ft .ico{position:absolute;top:4px;right:4px;color:#fff;font-size:11px;text-shadow:0 1px 3px rgba(0,0,0,.6);pointer-events:none}
+.fctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+/* sections can be dragged into the order Eli likes (saved on this device) */
+.wrap>.card>summary h2,.wrap>section>div>h2{cursor:grab}
+.wrap>.sec-ghost{opacity:.35}
 /* send bar */
 .sendbar{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;justify-content:center;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));pointer-events:none}
 .sendbar button{pointer-events:auto;font-size:15px;font-weight:600;border:0;border-radius:999px;padding:12px 20px;background:var(--ink);color:var(--bg);box-shadow:0 6px 24px rgba(0,0,0,.18);cursor:pointer;display:flex;gap:10px;align-items:center;max-width:100%}
@@ -182,13 +206,14 @@ details.fold>summary{color:var(--muted);font-weight:500;cursor:pointer}
 <div class="wrap" id="app" hidden>
 <header class="top"><div class="topline"><h1>Post Studio</h1><span class="status" id="status"></span></div><div id="offline"></div></header>
 <nav class="jump" id="jump"></nav>
-<details class="card" id="pan-cal" open><summary><span class="chev"></span><h2>Calendar</h2><span class="hint" id="sum-cal" style="margin-left:auto"></span></summary><div class="pbody"><div class="cal" id="cal"></div><div class="legend"><span><i class="dot ig"></i> Instagram</span><span><i class="dot tt"></i> TikTok twin</span><span><i class="dot pin"></i> Pinterest pin</span><span><i class="day gap" style="width:14px;height:14px;aspect-ratio:auto;display:inline-block"></i> a Wed/Sun with nothing yet</span></div></div></details>
-<details class="card" id="pan-sched" open><summary><span class="chev"></span><h2>Scheduled in Metricool</h2><span class="hint" id="sum-sched" style="margin-left:auto"></span></summary><div class="pbody"><p class="hint">These are booked and will go out by themselves. Tap one to see it. If something needs changing, write it there and send it to me.</p><div class="sched" id="sched"></div></div></details>
-<section id="pan-posts" class="posts" style="display:flex;flex-direction:column;gap:10px;scroll-margin-top:60px"><div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap"><h2>In the works</h2><span class="hint" id="sum-posts"></span><button class="chip" id="foldposts" type="button" style="margin-left:auto">Fold all</button></div>
+<details class="card" id="pan-feed" data-sec open><summary><span class="chev"></span><h2>Your feed</h2><span class="hint" id="sum-feed" style="margin-left:auto"></span></summary><div class="pbody"><p class="hint">Your real posts underneath, what's booked in Metricool (blue edge) above them, and the posts you're focusing on (red edge) on top, newest top-left. Drag a red one to change the order; tap any tile to see it big.</p><div class="fctl"><button class="chip" id="flab">Hide labels</button><span class="hint" id="feednote"></span></div><div id="feed"></div></div></details>
+<details class="card" id="pan-cal" data-sec open><summary><span class="chev"></span><h2>Calendar</h2><span class="hint" id="sum-cal" style="margin-left:auto"></span></summary><div class="pbody"><div class="cal" id="cal"></div><div class="legend"><span><i class="dot ig"></i> Instagram</span><span><i class="dot tt"></i> TikTok twin</span><span><i class="dot pin"></i> Pinterest pin</span><span><i class="day gap" style="width:14px;height:14px;aspect-ratio:auto;display:inline-block"></i> a Wed/Sun with nothing yet</span></div></div></details>
+<details class="card" id="pan-sched" data-sec open><summary><span class="chev"></span><h2>Scheduled in Metricool</h2><span class="hint" id="sum-sched" style="margin-left:auto"></span></summary><div class="pbody"><p class="hint">These are booked and will go out by themselves. Tap one to see it. If something needs changing, write it there and send it to me.</p><div class="sched" id="sched"></div></div></details>
+<section id="pan-posts" class="posts" data-sec style="display:flex;flex-direction:column;gap:10px;scroll-margin-top:60px"><div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap"><h2>In the works</h2><span class="hint" id="sum-posts"></span><button class="chip" id="foldposts" type="button" style="margin-left:auto">Fold all</button></div>
 <p class="hint">Tap a post to open it. Drag slides to reorder (press and hold on a phone). ✕ on a slide asks whether it's just not for this post, already posted, or never to be used. Tick photos in the green box to add them. <b>⭐ Focus</b> on the 2–3 you want ready first; tap <b>This is ready</b> when one's done. Then <b>Send to Claude</b> at the bottom.</p>
 <div id="posts"></div></section>
-<details class="card" id="pan-covers"><summary><span class="chev"></span><h2>Cover photos of you</h2><span class="hint" id="sum-covers" style="margin-left:auto"></span></summary><div class="pbody"><p class="hint">New photos of you land under <b>Your call</b>: <b>Has legs</b> to work on it, <b>Not for me</b> to put it away. In <b>Working on it</b>, write what to change. Nothing is deleted.</p><div id="heroes"></div></div></details>
-<details class="card" id="pan-posted"><summary><span class="chev"></span><h2>Posted</h2><span class="hint" id="sum-posted" style="margin-left:auto"></span></summary><div class="pbody"><div id="posted"></div></div></details>
+<details class="card" id="pan-covers" data-sec><summary><span class="chev"></span><h2>Cover photos of you</h2><span class="hint" id="sum-covers" style="margin-left:auto"></span></summary><div class="pbody"><p class="hint">New photos of you land under <b>Your call</b>: <b>Has legs</b> to work on it, <b>Not for me</b> to put it away. In <b>Working on it</b>, write what to change. Nothing is deleted.</p><div id="heroes"></div></div></details>
+<details class="card" id="pan-posted" data-sec><summary><span class="chev"></span><h2>Posted</h2><span class="hint" id="sum-posted" style="margin-left:auto"></span></summary><div class="pbody"><div id="posted"></div></div></details>
 <p class="hint" id="foot"></p>
 </div>
 <div class="sendbar" id="sendbar" hidden><button id="sendbtn"><span>Send to Claude</span><span class="n" id="sendn">0</span></button></div>
@@ -269,7 +294,33 @@ async function start(){$('#gate').remove();$('#app').hidden=false;$('#sendbar').
  D.eliPool=(D.eliPool||[]);
  ST={...blank(),...((got&&got.st)||{})};if(got){REMOTE_SHA=got.sha;LASTREMOTE=got.st}
  renderAll();hydrate()}
-function renderAll(){renderHeader();renderCal();renderSched();render();renderHeroes();renderPosted();updateSend();hydrate();initSort()}
+function renderAll(){renderHeader();renderCal();renderSched();render();renderHeroes();renderPosted();renderFeed();updateSend();hydrate();initSort();initSecSort()}
+/* ============ feed mock-up ============ */
+function feedItems(){const stg=p=>P(p.key).stage||'later';const ord=Array.isArray((ST.feed||{}).order)?ST.feed.order:[];const pos=k=>{const i=ord.indexOf('post:'+k);return i<0?1e6:i};
+ const plan=drafts().filter(p=>stg(p)==='focus').map((p,i)=>[p,i]).sort((a,b)=>(pos(a[0].key)-pos(b[0].key))||(a[1]-b[1])).map(t=>t[0]).map(p=>{const h=list(p,P(p.key))[0];return {kind:'plan',key:p.key,title:p.title,src:h.poster||h.src}});
+ const sch=sched().slice().reverse().map(p=>{const m=p.sched.ig||p.sched.tt;return {kind:'sched',key:p.key,title:p.title,src:(m.media||[])[0]||'',date:m.date}});
+ const posted=((D.feed&&D.feed.posted)||[]).map(x=>({kind:'posted',key:x.key,title:x.name,src:x.src,sp:x.sp,date:x.date,type:x.type,approx:x.approx}));
+ return {plan,sch,posted}}
+function renderFeed(){const el=$('#feed');if(!el)return;const {plan,sch,posted}=feedItems();const lab=(ST.feed||{}).labels!==false;const fb=$('#flab');if(fb)fb.textContent=lab?'Hide labels (see it clean)':'Show labels';
+ const ps=document.getElementById('phs');const top=ps?ps.scrollTop:0;
+ const tile=x=>{const pic=x.sp?`<div class="fimg" data-sp="${esc(x.sp[0])}" data-spc="${x.sp[1]}" data-spr="${x.sp[2]}" data-spC="${x.sp[3]}" data-spR="${x.sp[4]}" data-fopen="${esc(x.kind+':'+(x.key||x.title))}"></div>`:IMG(x.src,`data-fopen="${esc(x.kind+':'+(x.key||x.title))}"`);
+  const l=x.kind==='plan'?`⭐ ${x.title}`:x.kind==='sched'?`${fmtD(x.date,{day:'numeric',month:'short'})} · ${x.title}`:`${x.date?fmtD(x.date,{day:'numeric',month:'short'}):''}${x.approx?'~':''}`;
+  return `<div class="ft ${x.kind}" data-fkey="${esc('post:'+(x.key||''))}" title="${esc(x.title||'')}">${pic}${x.type==='reel'?'<span class="ico">▶</span>':''}${lab?`<span class="fl ${x.kind==='posted'?'dim':''}">${esc(l)}</span>`:''}</div>`};
+ const nAll=plan.length+sch.length+posted.length;
+ el.innerHTML=`<div class="phone"><div class="ph-top"><span>eli_inking</span><span>≡</span></div><div class="ph-prof"><div class="ph-av">EI</div><div class="ph-stats"><div><b>${nAll}</b><span>posts</span></div><div><b>30k</b><span>followers</span></div><div><b>·</b><span>following</span></div></div></div><div class="ph-bio"><b>Eli Inking</b><br>Tattoos, drawings, Bristol & guest spots<br><span style="color:var(--igmuted)">eliinking.co.uk</span></div><div class="ph-tabs"><span class="on">▦</span><span>▶</span><span>☺</span></div><div class="ph-scroll" id="phs"><div class="fgrid" id="fplan">${plan.map(tile).join('')}</div><div class="fgrid">${sch.map(tile).join('')}${posted.map(tile).join('')}</div></div></div>`;
+ $('#sum-feed').textContent=`${plan.length} in focus · ${sch.length} booked · ${posted.length} posted`;$('#feednote').textContent=(D.feed&&D.feed.note)||'';
+ el.querySelectorAll('.fimg[data-sp]').forEach(d=>{const C=+d.dataset.spC,R=+d.dataset.spR,c=+d.dataset.spc,r=+d.dataset.spr;d.style.backgroundSize=`${C*100}% ${R*100}%`;d.style.backgroundPosition=`${C>1?c/(C-1)*100:0}% ${R>1?r/(R-1)*100:0}%`;mediaURL(d.dataset.sp).then(u=>{if(u)d.style.backgroundImage=`url('${u}')`})});
+ hydrate(el);setTimeout(()=>{const p=document.getElementById('phs');if(p)p.scrollTop=top},0);
+ if(window.Sortable){const fp=$('#fplan');if(fp&&!fp._s)fp._s=Sortable.create(fp,{draggable:'.ft',animation:150,delay:180,delayOnTouchOnly:true,forceFallback:true,fallbackTolerance:4,ghostClass:'ghost',
+  onEnd:()=>{const vis=[...document.querySelectorAll('#fplan .ft')].map(t=>t.dataset.fkey);ST.feed={...(ST.feed||{}),order:vis};dirty('feed');ev('feed','order',{order:vis},'Feed order: '+vis.map(k=>{const p=D.posts.find(x=>'post:'+x.key===k);return p?p.title:k}).join(' → '));renderFeed()}})}}
+document.addEventListener('click',e=>{if(e.target.closest('#flab')){ST.feed={...(ST.feed||{}),labels:(ST.feed||{}).labels===false};dirty('feed');renderFeed();return}
+ const op=e.target.closest('[data-fopen]');if(op){const [kind,key]=op.dataset.fopen.split(/:(.*)/);if(kind==='plan'){lb={post:key,i:0};show()}else if(kind==='sched'){const p=D.posts.find(x=>x.key===key);const m=p.sched.ig||p.sched.tt;$('#lbc').innerHTML=`<img src="${esc(m.media[0])}" alt="">`;$('#lbcap').textContent=p.title;lb={post:null,i:0};$('#lb').hidden=false}
+  else{const d=op.dataset.sp?null:op;if(op.dataset.sp){const u=op.style.backgroundImage.slice(5,-2);const C=+op.dataset.spC,R=+op.dataset.spR,c=+op.dataset.spc,r=+op.dataset.spr;const im=new Image();im.onload=()=>{const w=im.width/C,h=im.height/R;const cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(im,c*w,r*h,w,h,0,0,w,h);$('#lbc').innerHTML='';cv.style.maxWidth='100%';cv.style.maxHeight='100%';$('#lbc').appendChild(cv);$('#lbcap').textContent=op.closest('.ft').title;lb={post:null,i:0};$('#lb').hidden=false};im.src=u}
+   else{mediaURL(op.dataset.src||op.src).then(u=>{$('#lbc').innerHTML=`<img src="${esc(u)}" alt="">`;$('#lbcap').textContent=op.closest('.ft').title;lb={post:null,i:0};$('#lb').hidden=false})}}}});
+/* ============ sections in the order Eli likes (this device) ============ */
+function initSecSort(){const w=$('#app');if(!w||w._s||!window.Sortable)return;let saved=[];try{saved=JSON.parse(localStorage.getItem('ps.sections')||'[]')}catch(e){}
+ if(saved.length){saved.forEach(id=>{const el=document.getElementById(id);if(el&&el.hasAttribute('data-sec'))w.appendChild(el)});const foot=$('#foot');if(foot)w.appendChild(foot)}
+ w._s=Sortable.create(w,{draggable:'[data-sec]',handle:'h2',animation:150,delay:180,delayOnTouchOnly:true,forceFallback:true,fallbackTolerance:6,ghostClass:'sec-ghost',onEnd:()=>{const ids=[...w.querySelectorAll('[data-sec]')].map(e=>e.id);try{localStorage.setItem('ps.sections',JSON.stringify(ids))}catch(e){}renderHeader()}})}
 /* ============ helpers ============ */
 const P=k=>ST.posts[k]||{};const setP=(k,f)=>{const s=ST.posts[k]={...(ST.posts[k]||{})};f(s);s.at=new Date().toISOString();dirty('post:'+k)};
 const lISO=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;const fmtD=(iso,opt)=>new Date(iso).toLocaleDateString('en-GB',opt||{weekday:'short',day:'numeric',month:'short'});
@@ -328,7 +379,7 @@ function render(){const stg=p=>P(p.key).stage||'later';const F=drafts().filter(p
  $('#posts').innerHTML=`<h3 class="grp">⭐ Focusing on now (${F.length})</h3>`+(F.length?`<div class="plist">${F.map(card).join('')}</div>`:'<p class="empty">Open a post and tap <b>⭐ Focus on this</b> on the 2–3 you want ready first.</p>')
   +(Rd.length?`<h3 class="grp">✓ Ready to schedule (${Rd.length})</h3><div class="plist">${Rd.map(card).join('')}</div>`:'')
   +`<details class="fold" id="grp-rest" ${OPEN.has('grp-rest')||!F.length?'open':''}><summary>Everything else (${L.length}): all kept, nothing lost</summary><div class="plist" style="margin-top:8px">${L.map(card).join('')}</div></details>`;
- $('#sum-posts').textContent=`${F.length} in focus · ${Rd.length} ready · ${L.length} for later`;hydrate();initSort();updateSend();document.querySelectorAll('.movph[data-bg]').forEach(el=>mediaURL(el.dataset.bg).then(u=>el.style.backgroundImage=`url('${u}')`))}
+ $('#sum-posts').textContent=`${F.length} in focus · ${Rd.length} ready · ${L.length} for later`;hydrate();initSort();updateSend();if(D.feed)renderFeed();document.querySelectorAll('.movph[data-bg]').forEach(el=>mediaURL(el.dataset.bg).then(u=>el.style.backgroundImage=`url('${u}')`))}
 /* ============ scheduled + posted + calendar ============ */
 const sched=()=>D.posts.filter(p=>p.status==='scheduled').sort((a,b)=>(a.sched.ig||a.sched.tt).date<(b.sched.ig||b.sched.tt).date?-1:1);
 function renderSched(){const S=sched();$('#sum-sched').textContent=S.length?`${S.length} booked`:'nothing booked';
@@ -356,7 +407,7 @@ function renderCal(){const items=[];sched().forEach(p=>{for(const net in p.sched
  $('#status').innerHTML=lastIG?`<b>${nIG} Instagram post${nIG===1?'':'s'}</b> booked, covered to <b>${esc(fmtD(lastIG))}</b> · ${drafts().length} in the works`:`Nothing booked · ${drafts().length} in the works`;
  window._calItems=byDay}
 function renderHeader(){$('#foot').textContent=`Built ${D.built.replace('T',' ')} · Metricool read ${(D.metricoolFetched||'').slice(0,16).replace('T',' ')} · ${D.eligibleCount} photos ready to use · this device: ${DEV}`;
- $('#jump').innerHTML=[['pan-cal','Calendar'],['pan-sched','Scheduled'],['pan-posts','In the works'],['pan-covers','Covers of you'],['pan-posted','Posted']].map(([id,t])=>`<button class="chip" data-jump="${id}">${t}</button>`).join('')+'<button class="chip" data-foldall="1">Fold everything</button>'}
+ const NAMES={'pan-feed':'Feed','pan-cal':'Calendar','pan-sched':'Scheduled','pan-posts':'In the works','pan-covers':'Covers of you','pan-posted':'Posted'};$('#jump').innerHTML=[...document.querySelectorAll('[data-sec]')].map(e=>[e.id,NAMES[e.id]||e.id]).map(([id,t])=>`<button class="chip" data-jump="${id}">${t}</button>`).join('')+'<button class="chip" data-foldall="1">Fold everything</button>'}
 /* ============ heroes ============ */
 function heroState(x){const v=(ST.heroes||{})[x[2]];const o=v&&typeof v==='object'?v:{};if(o.yes)return o.status==='ready'?'ready':'work';if(o.status==='parked')return 'parked';return x[3]==='new'?'decide':'parked'}
 function renderHeroes(){const s=ST.heroes||{};const get=x=>{const v=s[x[2]];return v&&typeof v==='object'?v:{}};
