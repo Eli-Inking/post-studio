@@ -110,6 +110,7 @@ details[open]>summary .chev::before{transform:rotate(45deg);top:5px}
 .pi input{width:16px;height:16px;vertical-align:-3px;accent-color:var(--green)}
 .pi.on{border-color:var(--green);color:var(--ink)}
 .pi.was{border:2px dashed var(--muted)}
+.pgh{font:600 13px/1.3 'Work Sans',system-ui,sans-serif;color:var(--green);margin:12px 0 0;text-transform:uppercase;letter-spacing:.05em}
 .more{margin-top:10px;width:100%;padding:10px;border-radius:10px;border:1px dashed var(--green);background:transparent;color:var(--green);cursor:pointer;font-weight:600}
 /* notes, caption, buttons */
 .note{background:var(--bluesoft);border-radius:10px;padding:10px 12px;font-size:14px;white-space:pre-line}
@@ -293,7 +294,7 @@ function pending(){return ST.events.filter(e=>!e.batch)}
 async function start(){$('#gate').remove();$('#app').hidden=false;$('#sendbar').hidden=false;
  const [raw,got]=await Promise.all([fetchDec('data.enc'),ghGet().catch(()=>({st:null,sha:null}))]);D=JSON.parse(TD.decode(raw));
  /* expand compact picker items: ['', why, pid] -> [picture, label, pid] from D.photos */
- const LH3='https://lh3.googleusercontent.com/d/';D.posts.forEach(p=>{if(!p.pick)return;p.pick.items=p.pick.items.map(x=>{if(x[0]||!D.photos[x[2]])return x;const m=D.photos[x[2]];return [LH3+m.d+'=w400',`${m.desc} · ${m.date.slice(0,7)} · ${m.tag}${x[1]?' · '+x[1]:''}`,x[2],x[3]]})});
+ const LH3='https://lh3.googleusercontent.com/d/';D.posts.forEach(p=>{if(!p.pick)return;const nb=p.pick.best||0;p.pick.items=p.pick.items.map((x,i)=>{if(x[0]||!D.photos[x[2]])return [x[0],x[1],x[2],x[3],i<nb];const m=D.photos[x[2]];return [LH3+m.d+'=w400',`${m.desc} · ${m.date.slice(0,7)} · ${m.tag}${x[1]?' · '+x[1]:''}`,x[2],x[3],i<nb]})});
  D.eliPool=(D.eliPool||[]);
  ST={...blank(),...((got&&got.st)||{})};if(got){REMOTE_SHA=got.sha;LASTREMOTE=got.st}
  renderAll();hydrate();checkBuild()}
@@ -310,12 +311,12 @@ function renderFeed(){const el=$('#feed');if(!el)return;const {plan,sch,posted}=
   const l=x.kind==='plan'?`⭐ ${x.title}`:x.kind==='sched'?`${fmtD(x.date,{day:'numeric',month:'short'})} · ${x.title}`:`${x.pinned?'📌 ':''}${x.date?fmtD(x.date,{day:'numeric',month:'short'}):''}${x.approx&&!x.pinned?'~':''}`;
   return `<div class="ft ${x.kind}" data-fkey="${esc('post:'+(x.key||''))}" title="${esc(x.title||'')}">${pic}${x.type==='reel'?'<span class="ico">▶</span>':''}${lab?`<span class="fl ${x.kind==='posted'?'dim':''}">${esc(l)}</span>`:''}</div>`};
  const nAll=plan.length+sch.length+posted.length;
- el.innerHTML=`<div class="phone"><div class="ph-top"><span>eli_inking</span><span>≡</span></div><div class="ph-prof"><div class="ph-av">EI</div><div class="ph-stats"><div><b>${nAll}</b><span>posts</span></div><div><b>30k</b><span>followers</span></div><div><b>·</b><span>following</span></div></div></div><div class="ph-bio"><b>Eli Inking</b><br>Tattoos, drawings, Bristol & guest spots<br><span style="color:var(--igmuted)">eliinking.co.uk</span></div><div class="ph-tabs"><span class="on">▦</span><span>▶</span><span>☺</span></div><div class="ph-scroll" id="phs"><div class="fgrid" id="fplan">${plan.map(tile).join('')}</div><div class="fgrid">${sch.map(tile).join('')}${posted.map(tile).join('')}</div></div></div>`;
+ el.innerHTML=`<div class="phone"><div class="ph-top"><span>eli_inking</span><span>≡</span></div><div class="ph-prof"><div class="ph-av">EI</div><div class="ph-stats"><div><b>${nAll}</b><span>posts</span></div><div><b>30k</b><span>followers</span></div><div><b>·</b><span>following</span></div></div></div><div class="ph-bio"><b>Eli Inking</b><br>Tattoos, drawings, Bristol & guest spots<br><span style="color:var(--igmuted)">eliinking.co.uk</span></div><div class="ph-tabs"><span class="on">▦</span><span>▶</span><span>☺</span></div><div class="ph-scroll" id="phs"><div class="fgrid" id="fplan">${plan.map(tile).join('')}${sch.map(tile).join('')}${posted.map(tile).join('')}</div></div></div>`;
  $('#sum-feed').textContent=`${plan.length} in focus · ${sch.length} booked · ${posted.length} posted`;$('#feednote').textContent=(D.feed&&D.feed.note)||'';
  el.querySelectorAll('.fimg[data-sp]').forEach(d=>{const C=+d.dataset.spcols,R=+d.dataset.sprows,c=+d.dataset.spcol,r=+d.dataset.sprow;d.style.backgroundSize=`${C*100}% ${R*100}%`;d.style.backgroundPosition=`${C>1?c/(C-1)*100:0}% ${R>1?r/(R-1)*100:0}%`;mediaURL(d.dataset.sp).then(u=>{if(u)d.style.backgroundImage=`url('${u}')`})});
  hydrate(el);setTimeout(()=>{const p=document.getElementById('phs');if(p)p.scrollTop=top},0);
- if(window.Sortable){const fp=$('#fplan');if(fp&&!fp._s)fp._s=Sortable.create(fp,{draggable:'.ft',animation:150,delay:180,delayOnTouchOnly:true,forceFallback:true,fallbackTolerance:4,ghostClass:'ghost',
-  onEnd:()=>{const vis=[...document.querySelectorAll('#fplan .ft')].map(t=>t.dataset.fkey);ST.feed={...(ST.feed||{}),order:vis};dirty('feed');ev('feed','order',{order:vis},'Feed order: '+vis.map(k=>{const p=D.posts.find(x=>'post:'+x.key===k);return p?p.title:k}).join(' → '));renderFeed()}})}}
+ if(window.Sortable){const fp=$('#fplan');if(fp&&!fp._s)fp._s=Sortable.create(fp,{draggable:'.ft.plan',onMove:e=>e.related.classList.contains('plan'),animation:150,delay:180,delayOnTouchOnly:true,forceFallback:true,fallbackTolerance:4,ghostClass:'ghost',
+  onEnd:()=>{const vis=[...document.querySelectorAll('#fplan .ft.plan')].map(t=>t.dataset.fkey);ST.feed={...(ST.feed||{}),order:vis};dirty('feed');ev('feed','order',{order:vis},'Feed order: '+vis.map(k=>{const p=D.posts.find(x=>'post:'+x.key===k);return p?p.title:k}).join(' → '));renderFeed()}})}}
 document.addEventListener('click',e=>{if(e.target.closest('#flab')){ST.feed={...(ST.feed||{}),labels:(ST.feed||{}).labels===false};dirty('feed');renderFeed();return}
  const op=e.target.closest('[data-fopen]');if(op){const [kind,key]=op.dataset.fopen.split(/:(.*)/);if(kind==='plan'){lb={post:key,i:0};show()}else if(kind==='sched'){const p=D.posts.find(x=>x.key===key);const m=p.sched.ig||p.sched.tt;$('#lbc').innerHTML=`<img src="${esc(m.media[0])}" alt="">`;$('#lbcap').textContent=p.title;lb={post:null,i:0};$('#lb').hidden=false}
   else{const d=op.dataset.sp?null:op;if(op.dataset.sp){const u=op.style.backgroundImage.slice(5,-2);const C=+op.dataset.spcols,R=+op.dataset.sprows,c=+op.dataset.spcol,r=+op.dataset.sprow;const im=new Image();im.onload=()=>{const w=im.width/C,h=im.height/R;const cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(im,c*w,r*h,w,h,0,0,w,h);$('#lbc').innerHTML='';cv.style.maxWidth='100%';cv.style.maxHeight='100%';$('#lbc').appendChild(cv);$('#lbcap').textContent=op.closest('.ft').title;lb={post:null,i:0};$('#lb').hidden=false};im.src=u}
@@ -348,11 +349,14 @@ function doneHtml(d){d=Array.isArray(d)?d:[];if(!d.length)return '';return `<det
 const SHOWN={};
 function pickHtml(p,s){const dr=s.drop||{};const gone=list(p,s).filter((x,i)=>i>0&&x.id&&dr[x.id]&&!flagged(x.id));const items=((p.pick&&p.pick.items)||[]).filter(x=>!flagged(x[2]));if(!items.length&&!gone.length)return '';
  const pk=s.picks||{};const n=items.filter(x=>pk[x[2]]).length;const q=(SHOWN[p.key+':q']||'').toLowerCase();const shown=SHOWN[p.key]||18;
- const vis=q?items.filter(x=>x[1].toLowerCase().includes(q)):items;const ticked=vis.filter(x=>pk[x[2]]),rest=vis.filter(x=>!pk[x[2]]);const page=[...ticked,...rest.slice(0,Math.max(0,shown-ticked.length))];
+ const vis=q?items.filter(x=>x[1].toLowerCase().includes(q)):items;const ticked=vis.filter(x=>pk[x[2]]),rest=vis.filter(x=>!pk[x[2]]);const nBest=q?0:rest.filter(x=>x[4]).length;const page=[...ticked,...rest.slice(0,Math.max(0,nBest+shown-ticked.length))];
  const goneHtml=gone.map(x=>`<label class="pi was">${IMG(x.src||x.poster,'data-rescue="1"')}<span><input type="checkbox" data-undrop="${esc(x.id)}" data-post="${p.key}"> You took this out: tick to put it back</span></label>`).join('');
  return `<details class="pick" ${s.stage==='focus'||n?'open':''}><summary>Pick more photos (${items.length}${n?`, ${n} ticked`:''})</summary><p class="hint" style="margin:6px 0 0">${esc(p.pick.hint||'')}</p>
  <div class="tools"><input type="search" placeholder="Search: cat, red, spine, healed…" value="${esc(SHOWN[p.key+':q']||'')}" data-pq="${p.key}"><span class="hint">${vis.length} shown of ${items.length}</span></div>
- <div class="pgrid">${goneHtml}${page.map(x=>`<label class="pi ${pk[x[2]]?'on':''}">${IMG(x[0],'data-rescue="1" data-big="'+esc(big(x[0]))+'"')}<span><input type="checkbox" data-pick="${esc(x[2])}" data-post="${p.key}" ${pk[x[2]]?'checked':''}> ${esc(x[1])}</span></label>`).join('')}</div>
+ ${(()=>{const pi=x=>`<label class="pi ${pk[x[2]]?'on':''}">${IMG(x[0],'data-rescue="1" data-big="'+esc(big(x[0]))+'"')}<span><input type="checkbox" data-pick="${esc(x[2])}" data-post="${p.key}" ${pk[x[2]]?'checked':''}> ${esc(x[1])}</span></label>`;
+  const bestAll=items.filter(x=>x[4]),bestN=bestAll.length,B=page.filter(x=>x[4]),O=page.filter(x=>!x[4]);
+  return (goneHtml?`<div class="pgrid">${goneHtml}</div>`:'')+(bestN&&!q?`<h4 class="pgh">Best fits for this post (${bestN})${p.pick.rule?` · ${esc(p.pick.rule)}`:''}</h4><div class="pgrid">${B.map(pi).join('')}</div>`:'')
+   +(O.length?`${bestN&&!q?`<h4 class="pgh">Everything else, best match first</h4>`:''}<div class="pgrid">${O.map(pi).join('')}</div>`:'')})()}
  ${page.length<vis.length?`<button class="more" data-more="${p.key}">Show ${Math.min(24,vis.length-page.length)} more</button>`:''}</details>`}
 function askHtml(p,s){let h='';if(p.ask)h+=`<div class="choice"><b>Your call</b><p class="hint" style="margin:0">${esc(p.ask.q)}</p><div class="chips">${p.ask.opts.map(o=>`<button class="chip ${s.ask===o?'on':''}" data-post="${p.key}" data-f="ask" data-v="${esc(o)}">${esc(o)}</button>`).join('')}</div></div>`;return h}
 function movTile(p,s,ck){if(p.r45)return '';const ready=p.moving&&p.moving[2]===ck;
