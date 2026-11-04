@@ -282,7 +282,10 @@ let LASTREMOTE=null;function mergeLocal(merged){ /* after a save, keep anything 
 function showOffline(){$('#offline').innerHTML=offline?'<div class="offline">Couldn\'t reach the notebook just now. Your taps are kept on this device and I keep retrying; the page will say Saved when they\'re through.</div>':''}
 function _typing(){const a=document.activeElement;return a&&(a.tagName==='TEXTAREA'||(a.tagName==='INPUT'&&a.type!=='checkbox'&&a.type!=='search'))}
 async function poll(){if(document.hidden||saving||DIRTY.size)return;try{const got=await ghGet();if(got&&got.st){REMOTE_SHA=got.sha;LASTREMOTE=got.st;ST={...blank(),...got.st};if(!_typing())renderAll()}}catch(e){}}
-setInterval(poll,45000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll()});
+setInterval(poll,45000);
+/* a newer build of the page itself: offer a reload (GitHub Pages caches index.html for ~10 min) */
+async function checkBuild(){try{const m=await (await fetch('meta.json',{cache:'no-store'})).json();if(D&&m.built&&m.built!==D.built){$('#offline').innerHTML=`<div class="offline" style="cursor:pointer" id="newbuild">A newer version of this page is ready (built ${esc(m.built.replace('T',' '))}). Tap here to reload.</div>`}}catch(e){}}
+setInterval(checkBuild,60000);document.addEventListener('click',e=>{if(e.target.closest('#newbuild')){fetch(location.pathname,{cache:'reload'}).finally(()=>location.reload())}});document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll()});
 /* events: every tap Eli makes is one line Claude can read later */
 function ev(post,kind,data,text){ST.events.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),at:new Date().toISOString(),dev:DEV,post,kind,data,text});updateSend()}
 function pending(){return ST.events.filter(e=>!e.batch)}
@@ -293,7 +296,7 @@ async function start(){$('#gate').remove();$('#app').hidden=false;$('#sendbar').
  const LH3='https://lh3.googleusercontent.com/d/';D.posts.forEach(p=>{if(!p.pick)return;p.pick.items=p.pick.items.map(x=>{if(x[0]||!D.photos[x[2]])return x;const m=D.photos[x[2]];return [LH3+m.d+'=w400',`${m.desc} · ${m.date.slice(0,7)} · ${m.tag}${x[1]?' · '+x[1]:''}`,x[2],x[3]]})});
  D.eliPool=(D.eliPool||[]);
  ST={...blank(),...((got&&got.st)||{})};if(got){REMOTE_SHA=got.sha;LASTREMOTE=got.st}
- renderAll();hydrate()}
+ renderAll();hydrate();checkBuild()}
 function renderAll(){renderHeader();renderCal();renderSched();render();renderHeroes();renderPosted();renderFeed();updateSend();hydrate();initSort();initSecSort()}
 /* ============ feed mock-up ============ */
 function feedItems(){const stg=p=>P(p.key).stage||'later';const ord=Array.isArray((ST.feed||{}).order)?ST.feed.order:[];const pos=k=>{const i=ord.indexOf('post:'+k);return i<0?1e6:i};
