@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Post Studio</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='13' fill='%23c0392b'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Work+Sans:wght@400;500;600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
+<style>
+/* Post Studio · Eli Inking · 4 Nov 2026. Warm paper, ink, one red. Colour only where it does a job. */
+:root{--bg:#f6f1e8;--card:#fffdf8;--ink:#2a2420;--muted:#7a6f66;--line:#e4dbcd;--red:#c0392b;--redsoft:#f6dcd6;--blue:#2f5d9c;--bluesoft:#dbe6f5;--green:#3f7a4a;--greensoft:#dcefdc;--amber:#9a6b1f;--ambersoft:#f5e7c8;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1c1916;--card:#262220;--ink:#f1ebe3;--muted:#a99e93;--line:#3a3430;--red:#e0695a;--redsoft:#4a2622;--blue:#7fa6dd;--bluesoft:#22324a;--green:#7fc08a;--greensoft:#22382a;--amber:#d9b067;--ambersoft:#3d3320;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#1c1916;--card:#262220;--ink:#f1ebe3;--muted:#a99e93;--line:#3a3430;--red:#e0695a;--redsoft:#4a2622;--blue:#7fa6dd;--bluesoft:#22324a;--green:#7fc08a;--greensoft:#22382a;--amber:#d9b067;--ambersoft:#3d3320;color-scheme:dark}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Work Sans",system-ui,sans-serif;overflow-x:hidden}
+.wrap{max-width:900px;margin:0 auto;padding:16px 16px calc(96px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:18px}
+h1,h2,h3{font-family:Fraunces,Georgia,serif;font-weight:600;text-wrap:balance;margin:0}
+h1{font-size:26px}h2{font-size:20px}h3{font-size:16px}
+.hint{font-size:13px;color:var(--muted)}
+button{font:inherit;color:inherit}
+.chip{font-size:14px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:6px 12px;cursor:pointer;text-align:left}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chip.yes{background:var(--greensoft);border-color:var(--green);color:var(--green)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;min-width:0}
+/* gate */
+#gate{position:fixed;inset:0;background:var(--bg);display:grid;place-items:center;z-index:100;padding:24px}
+#gate form{display:flex;flex-direction:column;gap:12px;width:min(360px,100%)}
+#gate input{font:inherit;font-size:18px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+#gate button{font-size:16px;padding:12px;border-radius:12px;border:0;background:var(--ink);color:var(--bg);cursor:pointer}
+#gate .err{color:var(--red);font-size:14px;min-height:20px}
+/* header */
+.top{display:flex;flex-direction:column;gap:8px}
+.topline{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.status{font-size:14px;color:var(--muted)}
+.status b{color:var(--ink);font-weight:600}
+.jump{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;display:flex;gap:6px;overflow-x:auto;padding:8px 0;margin:-6px 0;background:var(--bg);scrollbar-width:none}
+.jump::-webkit-scrollbar{display:none}.jump .chip{white-space:nowrap;font-size:13px;padding:5px 11px}
+/* calendar */
+.cal{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.month{min-width:0}.month h3{font-size:15px;margin-bottom:6px}
+.mg{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;font-size:11px}
+.mg .dn{color:var(--muted);text-align:center;font-size:10px;text-transform:uppercase;letter-spacing:.06em}
+.day{aspect-ratio:1;border-radius:7px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:var(--card);border:1px solid var(--line);color:var(--muted);position:relative;cursor:default;min-width:0}
+.day.pad{background:transparent;border-color:transparent}
+.day.today{border-color:var(--ink);color:var(--ink)}
+.day.has{cursor:pointer;color:var(--ink)}
+.day.gap{border-style:dashed}
+.day.past{opacity:.55}
+.dots{display:flex;gap:3px;height:6px}
+.dot{width:6px;height:6px;border-radius:50%}
+.dot.ig{background:var(--red)}.dot.tt{background:var(--ink)}.dot.pin{background:var(--muted);opacity:.6;width:4px;height:4px;margin-top:1px}
+.day img{position:absolute;inset:3px;width:calc(100% - 6px);height:calc(100% - 6px);object-fit:cover;border-radius:6px;opacity:.9}
+.day.has .num{position:relative;z-index:1;background:rgba(0,0,0,.55);color:#fff;border-radius:6px;padding:0 4px;font-size:11px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);align-items:center}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+/* post cards */
+details.card{display:block;padding:12px 14px;scroll-margin-top:60px}
+details.card>summary{list-style:none;display:flex;align-items:center;gap:10px;cursor:pointer;min-width:0}
+details.card>summary::-webkit-details-marker{display:none}
+.chev{flex:0 0 auto;width:22px;height:22px;border-radius:50%;background:var(--bg);border:1px solid var(--line);position:relative}
+.chev::before{content:"";position:absolute;left:7px;top:6px;width:6px;height:6px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(-45deg);transition:transform .15s}
+details[open]>summary .chev::before{transform:rotate(45deg);top:5px}
+.pthumb{width:44px;height:55px;object-fit:cover;border-radius:6px;flex:0 0 auto;background:var(--bg)}
+.ptxt{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1 1 auto}
+.ptxt b{font:600 16px/1.25 Fraunces,Georgia,serif}
+.meta{display:flex;flex-wrap:wrap;gap:4px 10px;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.badges{display:flex;gap:4px;flex-wrap:wrap}
+.badge{font-size:11px;background:var(--greensoft);color:var(--green);border-radius:999px;padding:1px 7px}
+.badge.amb{background:var(--ambersoft);color:var(--amber)}
+.stat{flex:0 0 auto;font-size:12px;border-radius:999px;padding:3px 9px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.stat.ok{background:var(--greensoft);color:var(--green);border-color:transparent}
+.stat.ch{background:var(--redsoft);color:var(--red);border-color:transparent}
+.stat.go{background:var(--green);color:var(--bg);border-color:transparent}
+.stat.sch{background:var(--bluesoft);color:var(--blue);border-color:transparent}
+.pbody{display:flex;flex-direction:column;gap:12px;margin-top:12px;min-width:0}
+.grp{margin:6px 0 -6px;font-size:15px}
+.plist{display:flex;flex-direction:column;gap:10px}
+/* strip */
+.strip{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:6px}
+.strip figure{margin:0;flex:0 0 auto;width:min(46vw,210px);scroll-snap-align:start;position:relative}
+.strip img,.strip video{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:8px;display:block;cursor:zoom-in;background:var(--bg)}
+.r45 .strip img,.r45 .cov img{aspect-ratio:4/5;object-fit:contain;background:#f1f1ee}
+.strip figcaption{position:absolute;top:6px;left:6px;background:rgba(0,0,0,.55);color:#fff;font-size:11px;padding:1px 6px;border-radius:9px;max-width:calc(100% - 44px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.strip figure .drop{position:absolute;top:6px;right:6px;z-index:2;width:28px;height:28px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font:600 14px/28px system-ui;cursor:pointer;padding:0}
+.strip figure.mv{cursor:grab}.strip figure.ghost{opacity:.35}
+.strip figure.dropped img{opacity:.28;filter:grayscale(1)}
+/* covers */
+.choice{display:flex;flex-direction:column;gap:6px;min-width:0}
+.choice b{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.covrow{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.cov{flex:0 0 auto;width:118px;border:2px solid transparent;border-radius:10px;padding:3px;background:var(--bg);cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:4px}
+.cov img,.cov video{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:7px;display:block;background:var(--bg)}.cov video{background:#000}
+.cov span{font-size:12px;line-height:1.3}
+.cov.on{border-color:var(--ink)}
+.cov.movc{border-style:dashed;border-color:var(--line)}.cov.movc.on{border-style:solid;border-color:var(--ink)}
+.movph{width:100%;aspect-ratio:3/4;border-radius:7px;display:grid;place-items:center;background-size:cover;background-position:center}
+.movph span{background:rgba(0,0,0,.55);color:#fff;border-radius:999px;width:40px;height:40px;display:grid;place-items:center;font-size:16px}
+/* picker */
+.pick{border:1px solid var(--green);border-radius:12px;padding:10px 12px;background:var(--greensoft)}
+.pick>summary{font-weight:600;font-size:15px;cursor:pointer}
+.pick .tools{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
+.pick input[type=search]{flex:1 1 180px;font:inherit;font-size:14px;padding:7px 10px;border-radius:9px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-top:10px}
+.pi{display:flex;flex-direction:column;gap:4px;cursor:pointer;font-size:11px;line-height:1.3;color:var(--muted);border-radius:9px;padding:4px;border:2px solid transparent;min-width:0;background:var(--card)}
+.pi img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:7px;display:block;cursor:zoom-in;background:var(--bg)}
+.pi input{width:16px;height:16px;vertical-align:-3px;accent-color:var(--green)}
+.pi.on{border-color:var(--green);color:var(--ink)}
+.pi.was{border:2px dashed var(--muted)}
+.more{margin-top:10px;width:100%;padding:10px;border-radius:10px;border:1px dashed var(--green);background:transparent;color:var(--green);cursor:pointer;font-weight:600}
+/* notes, caption, buttons */
+.note{background:var(--bluesoft);border-radius:10px;padding:10px 12px;font-size:14px;white-space:pre-line}
+.capbox{display:flex;flex-direction:column;gap:6px}
+textarea{width:100%;font:inherit;font-size:14px;line-height:1.45;padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);resize:vertical}
+.captext{min-height:150px;background:var(--card)}
+.caprow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.saved{font-size:12px;color:var(--muted)}
+.golive{display:block;width:100%;padding:13px 16px;border-radius:12px;border:2px dashed var(--green);background:transparent;color:var(--green);font-size:15px;font-weight:700;cursor:pointer;text-align:center}
+.golive.on{border-style:solid;background:var(--green);color:var(--bg)}
+.resp{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start}
+.resp textarea{flex:1 1 240px;min-height:38px}
+details.done{border-top:1px dashed var(--line);padding-top:8px}
+details.done summary{color:var(--green);font-weight:600;font-size:13px;cursor:pointer}
+.dn{font-size:13px;background:var(--bg);border-radius:8px;padding:8px 10px;margin-top:6px;max-width:70ch}
+.dn .when{display:block;color:var(--muted);font-size:12px}
+.chip[data-f="ask"]{white-space:pre-line;max-width:100%;line-height:1.35;padding:8px 12px}
+.v-yes{border-color:var(--green)}.v-change{border-color:var(--red)}
+/* scheduled compact */
+.sched{display:flex;flex-direction:column;gap:8px}
+.srow{display:flex;gap:10px;align-items:center;padding:8px 10px;border-radius:12px;background:var(--card);border:1px solid var(--line);cursor:pointer;text-align:left;width:100%}
+.srow img{width:40px;height:50px;object-fit:cover;border-radius:6px;background:var(--bg)}
+.srow .t{flex:1;min-width:0}.srow .t b{display:block;font:600 15px/1.25 Fraunces,Georgia,serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.srow .t span{font-size:12px;color:var(--muted)}
+.nets{display:flex;gap:4px}.net{font-size:10px;text-transform:uppercase;letter-spacing:.05em;border-radius:5px;padding:1px 5px;background:var(--bg);border:1px solid var(--line);color:var(--muted)}
+.net.ig{color:var(--red);border-color:var(--redsoft)}.net.tt{color:var(--ink)}
+/* heroes */
+.hgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
+@media (max-width:520px){.hgrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.hero span,.hero textarea,.hero .chip{font-size:11px}}
+.hero{display:flex;flex-direction:column;gap:6px;min-width:0}
+.hero img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:8px;cursor:zoom-in;display:block;background:var(--bg)}
+.hero span{font-size:12px;color:var(--muted);line-height:1.35}
+.hero textarea{font-size:13px;min-height:60px}
+.hero.picked{background:var(--greensoft);border-radius:10px;padding:6px}
+.hero.decide{border:2px dashed var(--line);border-radius:10px;padding:6px}
+details.fold{border-top:1px solid var(--line);padding-top:8px}
+details.fold>summary{color:var(--muted);font-weight:500;cursor:pointer}
+.vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;margin-top:6px}
+.vgrid figure{margin:0}.vgrid img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:6px}.vgrid figcaption{font-size:11px;color:var(--muted)}
+/* send bar */
+.sendbar{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;justify-content:center;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));pointer-events:none}
+.sendbar button{pointer-events:auto;font-size:15px;font-weight:600;border:0;border-radius:999px;padding:12px 20px;background:var(--ink);color:var(--bg);box-shadow:0 6px 24px rgba(0,0,0,.18);cursor:pointer;display:flex;gap:10px;align-items:center;max-width:100%}
+.sendbar button .n{background:var(--red);color:#fff;border-radius:999px;padding:0 8px;font-size:13px;line-height:22px}
+.sendbar button:disabled{opacity:.55;cursor:default}
+/* sheet (bottom sheet for ✕ choices and Send) */
+#sheet{position:fixed;inset:0;background:rgba(10,8,6,.5);z-index:60;display:flex;align-items:flex-end;justify-content:center}
+#sheet[hidden]{display:none}
+.sh{background:var(--card);border-radius:18px 18px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));width:min(560px,100%);display:flex;flex-direction:column;gap:10px;max-height:85vh;overflow:auto}
+.sh h3{font-size:17px}
+.sh .opt{text-align:left;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--bg);cursor:pointer;font-size:15px}
+.sh .opt small{display:block;color:var(--muted);font-size:12px}
+.sh .opt.danger{border-color:var(--redsoft);color:var(--red)}
+.sh pre{white-space:pre-wrap;font:14px/1.5 "Work Sans",system-ui,sans-serif;background:var(--bg);border-radius:10px;padding:10px 12px;margin:0;max-height:40vh;overflow:auto}
+.sh .copy{background:var(--ink);color:var(--bg);border:0;border-radius:12px;padding:12px;font-size:15px;font-weight:600;cursor:pointer}
+/* lightbox */
+#lb{position:fixed;inset:0;background:rgba(10,8,6,.93);display:flex;align-items:center;justify-content:center;z-index:70;padding:calc(env(safe-area-inset-top,0px) + 12px) 12px calc(env(safe-area-inset-bottom,0px) + 12px)}
+#lb[hidden]{display:none}
+#lb img,#lb video{max-width:100%;max-height:100%;object-fit:contain;border-radius:6px}
+#lb button{position:absolute;top:calc(env(safe-area-inset-top,0px) + 10px);right:12px;font-size:15px;background:#fff;color:#111;border:0;border-radius:999px;padding:6px 14px;cursor:pointer}
+#lb .nav{top:50%;transform:translateY(-50%)}#lb .prev{left:10px;right:auto}
+#lb .cap{position:absolute;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 10px);color:#fff;font-size:13px;text-align:center;text-shadow:0 1px 4px rgba(0,0,0,.7)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(76px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:999px;font-size:13px;z-index:45;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+.offline{background:var(--ambersoft);color:var(--amber);border-radius:10px;padding:8px 12px;font-size:13px}
+.empty{color:var(--muted);font-size:14px;padding:6px 0}
+</style>
+</head>
+<body>
+<div id="gate"><form id="gateform"><h1>Post Studio</h1><p class="hint">Your page for designing and scheduling posts. Type the password once on this device and it remembers you.</p><input id="pw" type="password" autocomplete="current-password" placeholder="Password" autofocus><button type="submit">Open</button><div class="err" id="gateerr"></div></form></div>
+<div class="wrap" id="app" hidden>
+<header class="top"><div class="topline"><h1>Post Studio</h1><span class="status" id="status"></span></div><div id="offline"></div></header>
+<nav class="jump" id="jump"></nav>
+<details class="card" id="pan-cal" open><summary><span class="chev"></span><h2>Calendar</h2><span class="hint" id="sum-cal" style="margin-left:auto"></span></summary><div class="pbody"><div class="cal" id="cal"></div><div class="legend"><span><i class="dot ig"></i> Instagram</span><span><i class="dot tt"></i> TikTok twin</span><span><i class="dot pin"></i> Pinterest pin</span><span><i class="day gap" style="width:14px;height:14px;aspect-ratio:auto;display:inline-block"></i> a Wed/Sun with nothing yet</span></div></div></details>
+<details class="card" id="pan-sched" open><summary><span class="chev"></span><h2>Scheduled in Metricool</h2><span class="hint" id="sum-sched" style="margin-left:auto"></span></summary><div class="pbody"><p class="hint">These are booked and will go out by themselves. Tap one to see it. If something needs changing, write it there and send it to me.</p><div class="sched" id="sched"></div></div></details>
+<section id="pan-posts" class="posts" style="display:flex;flex-direction:column;gap:10px;scroll-margin-top:60px"><div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap"><h2>In the works</h2><span class="hint" id="sum-posts"></span><button class="chip" id="foldposts" type="button" style="margin-left:auto">Fold all</button></div>
+<p class="hint">Tap a post to open it. Drag slides to reorder (press and hold on a phone). ✕ on a slide asks whether it's just not for this post, already posted, or never to be used. Tick photos in the green box to add them. <b>⭐ Focus</b> on the 2–3 you want ready first; tap <b>This is ready</b> when one's done. Then <b>Send to Claude</b> at the bottom.</p>
+<div id="posts"></div></section>
+<details class="card" id="pan-covers"><summary><span class="chev"></span><h2>Cover photos of you</h2><span class="hint" id="sum-covers" style="margin-left:auto"></span></summary><div class="pbody"><p class="hint">New photos of you land under <b>Your call</b>: <b>Has legs</b> to work on it, <b>Not for me</b> to put it away. In <b>Working on it</b>, write what to change. Nothing is deleted.</p><div id="heroes"></div></div></details>
+<details class="card" id="pan-posted"><summary><span class="chev"></span><h2>Posted</h2><span class="hint" id="sum-posted" style="margin-left:auto"></span></summary><div class="pbody"><div id="posted"></div></div></details>
+<p class="hint" id="foot"></p>
+</div>
+<div class="sendbar" id="sendbar" hidden><button id="sendbtn"><span>Send to Claude</span><span class="n" id="sendn">0</span></button></div>
+<div id="sheet" hidden><div class="sh" id="shc"></div></div>
+<div id="lb" hidden><button class="prev nav" id="lbp">‹</button><button id="lbx">Close</button><button class="nav" id="lbn" style="top:50%;right:10px">›</button><div id="lbc" style="display:contents"></div><div class="cap" id="lbcap"></div></div>
+<div class="toast" id="toast"></div>
+<script>
+/* ============ crypto + gate ============ */
+const $=s=>document.querySelector(s);const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const b64d=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));const b64e=u=>{let s='';u.forEach(b=>s+=String.fromCharCode(b));return btoa(s)};
+let META=null,KEY=null,VAULT=null,D=null,ST=null,REMOTE_SHA=null,ETAG=null;
+async function deriveKey(pw){const km=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveBits']);
+ return new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',salt:b64d(META.salt),iterations:META.iter,hash:'SHA-256'},km,256))}
+async function importKey(raw){return crypto.subtle.importKey('raw',raw,'AES-GCM',false,['encrypt','decrypt'])}
+async function dec(buf){const u=new Uint8Array(buf);return new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:u.slice(0,12)},KEY,u.slice(12)))}
+async function enc(bytes){const iv=crypto.getRandomValues(new Uint8Array(12));const c=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},KEY,bytes));const o=new Uint8Array(12+c.length);o.set(iv);o.set(c,12);return o}
+const TD=new TextDecoder();
+async function fetchDec(path){const r=await fetch(path,{cache:'no-store'});if(!r.ok)throw new Error(path+' '+r.status);return dec(await r.arrayBuffer())}
+async function tryOpen(raw){KEY=await importKey(raw);VAULT=JSON.parse(TD.decode(await fetchDec('vault.enc')));return true}
+(async()=>{META=await (await fetch('meta.json',{cache:'no-store'})).json();
+ let saved=null;try{saved=localStorage.getItem('ps.key')}catch(e){}
+ if(saved){try{await tryOpen(b64d(saved));return start()}catch(e){try{localStorage.removeItem('ps.key')}catch(_){}}}
+ $('#gateform').addEventListener('submit',async e=>{e.preventDefault();$('#gateerr').textContent='';const btn=e.target.querySelector('button');btn.disabled=true;btn.textContent='Checking…';
+  try{const raw=await deriveKey($('#pw').value);await tryOpen(raw);try{localStorage.setItem('ps.key',b64e(raw))}catch(_){}start()}
+  catch(err){$('#gateerr').textContent="That's not it. Try again.";btn.disabled=false;btn.textContent='Open'}})})();
+/* ============ encrypted media: decrypt on demand into object URLs ============ */
+const URLS={};const PENDING={};
+function sniff(u){if(u[0]===0xff&&u[1]===0xd8)return 'image/jpeg';if(u[0]===0x89&&u[1]===0x50)return 'image/png';if(u[4]===0x66&&u[5]===0x74&&u[6]===0x79&&u[7]===0x70)return 'video/mp4';return 'application/octet-stream'}
+async function mediaURL(path){if(!path||path.startsWith('http')||path.startsWith('blob:'))return path;if(URLS[path])return URLS[path];
+ if(!PENDING[path])PENDING[path]=fetchDec(path).then(u=>{const url=URL.createObjectURL(new Blob([u],{type:sniff(u)}));URLS[path]=url;return url}).catch(()=>'');
+ return PENDING[path]}
+const IO=new IntersectionObserver(es=>es.forEach(e=>{if(!e.isIntersecting)return;const el=e.target;IO.unobserve(el);const p=el.dataset.src;if(!p)return;
+ mediaURL(p).then(u=>{if(!u)return;if(el.tagName==='VIDEO'){el.src=u;if(el.dataset.poster)mediaURL(el.dataset.poster).then(pu=>el.poster=pu);el.play().catch(()=>{})}else el.src=u})}),{rootMargin:'300px'});
+function hydrate(root){(root||document).querySelectorAll('[data-src]:not([data-h])').forEach(el=>{el.dataset.h='1';const p=el.dataset.src;if(p.startsWith('http')){el.src=p;if(el.tagName==='VIDEO')el.play().catch(()=>{})}else IO.observe(el)})}
+const IMG=(src,attrs='',cls='')=>`<img loading="lazy" ${src&&src.startsWith('http')?`src="${esc(src)}"`:`data-src="${esc(src)}"`} alt="" ${cls?`class="${cls}"`:''} ${attrs}>`;
+const VID=(src,poster,attrs='')=>`<video ${src.startsWith('http')?`src="${esc(src)}"`:`data-src="${esc(src)}" data-poster="${esc(poster||'')}"`} muted loop autoplay playsinline ${attrs}></video>`;
+const big=src=>src&&src.startsWith('https://lh3.googleusercontent.com/')?src.replace(/=w\d+$/,'=w1600'):src;
+/* ============ state on GitHub (branch 'state', state.enc) ============ */
+const GHH=()=>({Authorization:'Bearer '+VAULT.token,Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'});
+const GHU=()=>`https://api.github.com/repos/${VAULT.owner}/${VAULT.repo}/contents/state.enc`;
+async function ghGet(){const h=GHH();if(ETAG)h['If-None-Match']=ETAG;const r=await fetch(GHU()+'?ref='+VAULT.branch+'&t='+Date.now(),{headers:h,cache:'no-store'});
+ if(r.status===304)return null;if(r.status===404)return {st:null,sha:null};if(!r.ok)throw new Error('state '+r.status);ETAG=r.headers.get('ETag');const j=await r.json();
+ let bytes;if(j.content)bytes=b64d(j.content.replace(/\n/g,''));else{const b=await (await fetch(j.git_url,{headers:GHH()})).json();bytes=b64d(b.content.replace(/\n/g,''))}
+ return {st:JSON.parse(TD.decode(await dec(bytes))),sha:j.sha}}
+async function ghPut(st,sha){const body={message:'Eli · '+new Date().toISOString().slice(0,16).replace('T',' '),content:b64e(await enc(new TextEncoder().encode(JSON.stringify(st)))),branch:VAULT.branch};if(sha)body.sha=sha;
+ const r=await fetch(GHU(),{method:'PUT',headers:{...GHH(),'Content-Type':'application/json'},body:JSON.stringify(body)});
+ if(r.status===409||r.status===422)return null;if(!r.ok)throw new Error('save '+r.status);const j=await r.json();ETAG=null;return j.content.sha}
+const DEV=(()=>{try{let d=localStorage.getItem('ps.dev');if(!d){d=(navigator.platform||'device').replace(/\W+/g,'').slice(0,8)+'-'+Math.random().toString(36).slice(2,6);localStorage.setItem('ps.dev',d)}return d}catch(e){return 'device'}})();
+const DIRTY=new Set();let saveTimer=null,saving=false,offline=false;
+function blank(){return {posts:{},heroes:{},feed:{},misc:{},events:[],batches:[],photoFlags:{},schedNotes:{}}}
+function merge(remote,local){ /* this device's dirty keys win; events/batches/flags are unions */
+ const out=JSON.parse(JSON.stringify(remote||blank()));out.posts=out.posts||{};out.events=out.events||[];out.batches=out.batches||[];out.photoFlags=out.photoFlags||{};out.schedNotes=out.schedNotes||{};out.misc=out.misc||{};
+ for(const k of DIRTY){if(k.startsWith('post:')){const key=k.slice(5);const r=out.posts[key]||{};const l=local.posts[key]||{};out.posts[key]={...l,done:r.done||l.done}} /* Claude's done list is never overwritten from here */
+  else if(k==='heroes'){const r=out.heroes||{},l=local.heroes||{};const m={...r};for(const h in l){if(h==='at')continue;const rv=r[h]&&typeof r[h]==='object'?r[h]:{};const lv=l[h]&&typeof l[h]==='object'?l[h]:{};m[h]={...lv,done:rv.done||lv.done}}out.heroes=m}
+  else if(k==='feed')out.feed=local.feed;else if(k==='misc')out.misc={...out.misc,...local.misc};else if(k==='schedNotes')out.schedNotes={...out.schedNotes,...local.schedNotes}}
+ const seen=new Set(out.events.map(e=>e.id));local.events.forEach(e=>{if(!seen.has(e.id))out.events.push(e)});out.events.sort((a,b)=>a.at<b.at?-1:1);
+ const bs=new Set(out.batches.map(b=>b.id));local.batches.forEach(b=>{if(!bs.has(b.id))out.batches.push(b)});
+ out.photoFlags={...out.photoFlags,...local.photoFlags};return out}
+function dirty(k){DIRTY.add(k);clearTimeout(saveTimer);saveTimer=setTimeout(save,900);setSaved('…')}
+function setSaved(t){document.querySelectorAll('.saved').forEach(e=>e.textContent=t)}
+async function save(){if(saving){clearTimeout(saveTimer);saveTimer=setTimeout(save,700);return}saving=true;
+ try{for(let i=0;i<3;i++){const got=await ghGet();if(got){REMOTE_SHA=got.sha;var remote=got.st}else remote=LASTREMOTE;
+   const merged=merge(remote,ST);const sha=await ghPut(merged,REMOTE_SHA);if(sha){REMOTE_SHA=sha;LASTREMOTE=merged;ST=mergeLocal(merged);DIRTY.clear();setSaved('Saved');offline=false;showOffline();saving=false;return}}
+  throw new Error('conflict')}catch(e){offline=true;showOffline();setSaved("Not saved yet: I'll retry");saving=false;clearTimeout(saveTimer);saveTimer=setTimeout(save,8000)}}
+let LASTREMOTE=null;function mergeLocal(merged){ /* after a save, keep anything typed meanwhile */ const o=JSON.parse(JSON.stringify(merged));for(const k of DIRTY){if(k.startsWith('post:')){const key=k.slice(5);o.posts[key]={...(o.posts[key]||{}),...(ST.posts[key]||{}),done:(o.posts[key]||{}).done}}}return o}
+function showOffline(){$('#offline').innerHTML=offline?'<div class="offline">Couldn\'t reach the notebook just now. Your taps are kept on this device and I keep retrying; the page will say Saved when they\'re through.</div>':''}
+function _typing(){const a=document.activeElement;return a&&(a.tagName==='TEXTAREA'||(a.tagName==='INPUT'&&a.type!=='checkbox'&&a.type!=='search'))}
+async function poll(){if(document.hidden||saving||DIRTY.size)return;try{const got=await ghGet();if(got&&got.st){REMOTE_SHA=got.sha;LASTREMOTE=got.st;ST={...blank(),...got.st};if(!_typing())renderAll()}}catch(e){}}
+setInterval(poll,45000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll()});
+/* events: every tap Eli makes is one line Claude can read later */
+function ev(post,kind,data,text){ST.events.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),at:new Date().toISOString(),dev:DEV,post,kind,data,text});updateSend()}
+function pending(){return ST.events.filter(e=>!e.batch)}
+/* ============ start ============ */
+async function start(){$('#gate').remove();$('#app').hidden=false;$('#sendbar').hidden=false;
+ const [raw,got]=await Promise.all([fetchDec('data.enc'),ghGet().catch(()=>({st:null,sha:null}))]);D=JSON.parse(TD.decode(raw));
+ /* expand compact picker items: ['', why, pid] -> [picture, label, pid] from D.photos */
+ const LH3='https://lh3.googleusercontent.com/d/';D.posts.forEach(p=>{if(!p.pick)return;p.pick.items=p.pick.items.map(x=>{if(x[0]||!D.photos[x[2]])return x;const m=D.photos[x[2]];return [LH3+m.d+'=w400',`${m.desc} · ${m.date.slice(0,7)} · ${m.tag}${x[1]?' · '+x[1]:''}`,x[2],x[3]]})});
+ D.eliPool=(D.eliPool||[]);
+ ST={...blank(),...((got&&got.st)||{})};if(got){REMOTE_SHA=got.sha;LASTREMOTE=got.st}
+ renderAll();hydrate()}
+function renderAll(){renderHeader();renderCal();renderSched();render();renderHeroes();renderPosted();updateSend();hydrate();initSort()}
+/* ============ helpers ============ */
+const P=k=>ST.posts[k]||{};const setP=(k,f)=>{const s=ST.posts[k]={...(ST.posts[k]||{})};f(s);s.at=new Date().toISOString();dirty('post:'+k)};
+const lISO=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;const fmtD=(iso,opt)=>new Date(iso).toLocaleDateString('en-GB',opt||{weekday:'short',day:'numeric',month:'short'});
+const fmtDT=iso=>new Date(iso).toLocaleString('en-GB',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+function first(o){return Object.keys(o)[0]}
+const flagged=id=>ST.photoFlags&&ST.photoFlags[id]&&ST.photoFlags[id].flag!=='post';
+function list(p,s){const ck=p.covers[s.cover]?s.cover:first(p.covers);let ex=[];if(p.options){const ok=p.options[s.option]?s.option:first(p.options);ex=p.options[ok][1]}
+ const a=[{src:p.covers[ck][0]}];if(s.moving&&p.moving&&p.moving[2]===ck)a[0]={src:p.moving[0],poster:p.moving[1],video:true,moving:true};
+ if(p.video&&p.videoAt==null)a.push({src:p.video[0],poster:p.video[1],video:true});ex.forEach(x=>a.push({src:x}));const sk=(p.skip&&p.skip[ck])||[];
+ p.rest.map(x=>({src:x[0],id:x[1]})).filter(x=>!sk.includes(x.src)).forEach(x=>a.push(x));
+ if(p.video&&p.videoAt!=null)a.splice(p.videoAt,0,{src:p.video[0],poster:p.video[1],video:true});
+ if(p.videos)p.videos.forEach(v=>a.push({src:v[0],poster:v[1],id:v[2],video:true}));
+ if(p.pick){const pk=s.picks||{};p.pick.items.filter(x=>pk[x[2]]).forEach(x=>a.push({src:x[0],id:x[2],picked:true}))}
+ a.forEach(x=>x.key=x.id||(x.video?'video':x.src));
+ if(Array.isArray(s.order)&&s.order.length){const pos=k=>{const i=s.order.indexOf(k);return i<0?1e6:i};const head=a[0],tail=a.slice(1).map((x,i)=>[x,i]);tail.sort((u,v)=>(pos(u[0].key)-pos(v[0].key))||(u[1]-v[1]));return [head,...tail.map(t=>t[0])]}
+ return a}
+function slidesHtml(p,s){const all=list(p,s);const dr=s.drop||{};const kept=all.filter(x=>!(x.id&&dr[x.id]));let n=0;
+ return all.map((x,i)=>{const off=x.id&&dr[x.id];if(off)return '';n++;const lab=x.id&&D.photos[x.id]?D.photos[x.id].desc:'';
+  return `<figure class="${i===0?'cover-fig':'mv'}" data-key="${esc(x.key)}">${x.id&&i>0?`<button class="drop" data-post="${p.key}" data-drop="${esc(x.id)}" title="Take this slide out">✕</button>`:''}${x.video?VID(x.src,x.poster,`data-post="${p.key}" data-i="${i}"`):IMG(x.src,`data-post="${p.key}" data-i="${i}"`)}<figcaption>${n}/${kept.length}${x.picked?' · your pick':''}${x.id&&(p.edited||[]).includes(x.id)?' · ✎ your edit':''}</figcaption></figure>`}).join('')}
+function doneHtml(d){d=Array.isArray(d)?d:[];if(!d.length)return '';return `<details class="done"><summary>✓ Done: ${d.length} earlier note${d.length>1?'s':''} applied</summary>${d.slice().reverse().map(x=>`<div class="dn"><span class="when">${esc(x.when||'')}</span><b>You said:</b> ${esc(x.note||'')}${x.did?`<br><b>Done:</b> ${esc(x.did)}`:''}</div>`).join('')}</details>`}
+/* picker: everything eligible, best matches first, show more in pages, search */
+const SHOWN={};
+function pickHtml(p,s){const dr=s.drop||{};const gone=list(p,s).filter((x,i)=>i>0&&x.id&&dr[x.id]&&!flagged(x.id));const items=((p.pick&&p.pick.items)||[]).filter(x=>!flagged(x[2]));if(!items.length&&!gone.length)return '';
+ const pk=s.picks||{};const n=items.filter(x=>pk[x[2]]).length;const q=(SHOWN[p.key+':q']||'').toLowerCase();const shown=SHOWN[p.key]||18;
+ const vis=q?items.filter(x=>x[1].toLowerCase().includes(q)):items;const ticked=vis.filter(x=>pk[x[2]]),rest=vis.filter(x=>!pk[x[2]]);const page=[...ticked,...rest.slice(0,Math.max(0,shown-ticked.length))];
+ const goneHtml=gone.map(x=>`<label class="pi was">${IMG(x.src||x.poster,'data-rescue="1"')}<span><input type="checkbox" data-undrop="${esc(x.id)}" data-post="${p.key}"> You took this out: tick to put it back</span></label>`).join('');
+ return `<details class="pick" ${s.stage==='focus'||n?'open':''}><summary>Pick more photos (${items.length}${n?`, ${n} ticked`:''})</summary><p class="hint" style="margin:6px 0 0">${esc(p.pick.hint||'')}</p>
+ <div class="tools"><input type="search" placeholder="Search: cat, red, spine, healed…" value="${esc(SHOWN[p.key+':q']||'')}" data-pq="${p.key}"><span class="hint">${vis.length} shown of ${items.length}</span></div>
+ <div class="pgrid">${goneHtml}${page.map(x=>`<label class="pi ${pk[x[2]]?'on':''}">${IMG(x[0],'data-rescue="1" data-big="'+esc(big(x[0]))+'"')}<span><input type="checkbox" data-pick="${esc(x[2])}" data-post="${p.key}" ${pk[x[2]]?'checked':''}> ${esc(x[1])}</span></label>`).join('')}</div>
+ ${page.length<vis.length?`<button class="more" data-more="${p.key}">Show ${Math.min(24,vis.length-page.length)} more</button>`:''}</details>`}
+function askHtml(p,s){let h='';if(p.ask)h+=`<div class="choice"><b>Your call</b><p class="hint" style="margin:0">${esc(p.ask.q)}</p><div class="chips">${p.ask.opts.map(o=>`<button class="chip ${s.ask===o?'on':''}" data-post="${p.key}" data-f="ask" data-v="${esc(o)}">${esc(o)}</button>`).join('')}</div></div>`;return h}
+function movTile(p,s,ck){if(p.r45)return '';const ready=p.moving&&p.moving[2]===ck;
+ const lab=ready?(s.moving?'✓ Moving cover in use (tap for the still one)':'Moving cover: the letters gently boil (tap to use)'):(s.moving?'✓ Moving cover asked for':'Make this cover move (letters gently boil)');
+ const pic=ready?VID(p.moving[0],p.moving[1]):`<div class="movph" data-bg="${esc(p.covers[ck][0])}"><span>▶</span></div>`;
+ return `<button class="cov movc ${s.moving?'on':''}" data-moving="${p.key}">${pic}<span>${lab}</span></button>`}
+function initSort(){if(!window.Sortable)return;document.querySelectorAll('#posts details[open] .strip').forEach(el=>{if(el._s)return;const k=el.closest('.post').id;
+ el._s=Sortable.create(el,{draggable:'figure.mv',filter:'.drop',preventOnFilter:false,animation:150,delay:180,delayOnTouchOnly:true,forceFallback:true,fallbackTolerance:4,ghostClass:'ghost',onMove:e=>!e.related.classList.contains('cover-fig'),
+  onEnd:()=>{const keys=[...el.querySelectorAll('figure.mv')].map(f=>f.dataset.key);setP(k,s=>{s.order=keys});ev(k,'order',{order:keys},'Reordered the slides');render()}})})}
+/* ============ cards ============ */
+function card(p){const s=P(p.key);const ck=p.covers[s.cover]?s.cover:first(p.covers);
+ const covers=Object.entries(p.covers).map(([k,v])=>`<button class="cov ${ck===k?'on':''}" data-post="${p.key}" data-f="cover" data-v="${k}">${IMG(v[0])}<span>${esc(v[1])}</span></button>`).join('');
+ const opts=p.options?`<div class="choice"><b>Spine shots</b><div class="chips">${Object.entries(p.options).map(([k,v])=>{const ok=p.options[s.option]?s.option:first(p.options);return `<button class="chip ${ok===k?'on':''}" data-post="${p.key}" data-f="option" data-v="${k}">${esc(v[0])}</button>`}).join('')}</div></div>`:'';
+ const h=list(p,s)[0];const thumb=h.poster||h.src;const nPick=Object.values(s.picks||{}).filter(Boolean).length;const nSl=list(p,s).filter(x=>!(x.id&&(s.drop||{})[x.id])).length;
+ const stat=s.schedule?'<span class="stat go">Ready: schedule it</span>':s.stage==='ready'?'<span class="stat ok">✓ Ready</span>':s.verdict==='yes'?'<span class="stat ok">Looks good</span>':s.verdict==='change'?'<span class="stat ch">Changes</span>':'<span class="stat">To review</span>';
+ const pend=pending().filter(e=>e.post===p.key).length;const badges=[nPick?`${nPick} ticked`:'',(s.note||'').trim()?'note':'',pend?`<span class="badge amb">${pend} not sent yet</span>`:''].filter(Boolean).map(t=>t.startsWith('<')?t:`<span class="badge">${t}</span>`).join('');
+ return `<details class="card post ${p.r45?'r45':''} ${s.verdict?'v-'+s.verdict:''}" id="${p.key}" ${OPEN.has('post:'+p.key)?'open':''}><summary><span class="chev"></span>${IMG(thumb,'','pthumb')}<span class="ptxt"><b>${esc(p.title)}</b><span class="meta"><span>${esc(p.kind.replace(/·\s*\d+ slides?/,'· '+nSl+' slides'))}</span>${s.stage==='focus'?'<span>⭐ focus</span>':''}</span>${badges?`<span class="badges">${badges}</span>`:''}</span>${stat}</summary><div class="pbody">
+ <div class="chips">${[['focus','⭐ Focus'],['ready','✓ Ready'],['later','Later']].map(([v,t])=>`<button class="chip ${s.stage===v||(!s.stage&&v==='later')?'on':''}" data-post="${p.key}" data-f="stage" data-v="${v}">${t}</button>`).join('')}</div>
+ <div class="strip">${slidesHtml(p,s)}</div>
+ <div class="choice"><b>${Object.keys(p.covers).length>1||!p.r45?'Cover options (tap to try)':'Cover'}</b><div class="covrow">${covers}${movTile(p,s,ck)}</div></div>${opts}${pickHtml(p,s)}${askHtml(p,s)}
+ ${p.notes?`<div class="note">${esc(p.notes)}</div>`:''}
+ <div class="capbox"><b class="hint" style="text-transform:uppercase;letter-spacing:.06em;font-size:12px">Caption <span style="text-transform:none;letter-spacing:0">· ${s.caption!=null&&s.caption!==p.caption?'your edit':'my draft, edit it right here'}</span></b><textarea class="captext" data-cap="${p.key}" rows="8">${esc(s.caption!=null?s.caption:p.caption)}</textarea><div class="caprow"><span class="saved"></span>${s.caption!=null&&s.caption!==p.caption?`<button class="chip" data-capreset="${p.key}">Back to my draft</button>`:''}</div><p class="hint" style="margin:0">Song: ${esc(p.song||'')}</p></div>
+ <button class="golive ${s.schedule?'on':''}" data-schedule="${p.key}">${s.schedule?'✅ Ready: schedule it (tap to undo)':'☐ This is ready: schedule it'}</button>${s.schedule&&s.scheduleAt?`<p class="hint" style="margin:-6px 0 0">Ticked ${esc(fmtDT(s.scheduleAt))}. Send to Claude and I'll book it in Metricool (Instagram + TikTok twin) and tell you when it's done.</p>`:''}
+ <div class="resp"><button class="chip ${s.verdict==='yes'?'on':''}" data-post="${p.key}" data-f="verdict" data-v="yes">Looks good</button><button class="chip ${s.verdict==='change'?'on':''}" data-post="${p.key}" data-f="verdict" data-v="change">Changes</button><textarea data-post="${p.key}" placeholder="What to change (optional)">${esc(s.note||'')}</textarea><span class="saved"></span></div>${doneHtml(s.done)}</div></details>`}
+const drafts=()=>D.posts.filter(p=>p.status==='draft');
+function render(){const stg=p=>P(p.key).stage||'later';const F=drafts().filter(p=>stg(p)==='focus'),Rd=drafts().filter(p=>stg(p)==='ready'),L=drafts().filter(p=>stg(p)==='later');
+ $('#posts').innerHTML=`<h3 class="grp">⭐ Focusing on now (${F.length})</h3>`+(F.length?`<div class="plist">${F.map(card).join('')}</div>`:'<p class="empty">Open a post and tap <b>⭐ Focus on this</b> on the 2–3 you want ready first.</p>')
+  +(Rd.length?`<h3 class="grp">✓ Ready to schedule (${Rd.length})</h3><div class="plist">${Rd.map(card).join('')}</div>`:'')
+  +`<details class="fold" id="grp-rest" ${OPEN.has('grp-rest')||!F.length?'open':''}><summary>Everything else (${L.length}): all kept, nothing lost</summary><div class="plist" style="margin-top:8px">${L.map(card).join('')}</div></details>`;
+ $('#sum-posts').textContent=`${F.length} in focus · ${Rd.length} ready · ${L.length} for later`;hydrate();initSort();updateSend();document.querySelectorAll('.movph[data-bg]').forEach(el=>mediaURL(el.dataset.bg).then(u=>el.style.backgroundImage=`url('${u}')`))}
+/* ============ scheduled + posted + calendar ============ */
+const sched=()=>D.posts.filter(p=>p.status==='scheduled').sort((a,b)=>(a.sched.ig||a.sched.tt).date<(b.sched.ig||b.sched.tt).date?-1:1);
+function renderSched(){const S=sched();$('#sum-sched').textContent=S.length?`${S.length} booked`:'nothing booked';
+ $('#sched').innerHTML=S.length?S.map(p=>{const m=p.sched.ig||p.sched.tt;const open=OPEN.has('sched:'+p.key);const note=(ST.schedNotes||{})[p.key]||'';
+  return `<div><button class="srow" data-sopen="${p.key}">${IMG((m.media||[])[0]||'')}<span class="t"><b>${esc(p.title)}</b><span>${esc(fmtDT(m.date))}</span></span><span class="nets">${p.sched.ig?'<span class="net ig">Instagram</span>':''}${p.sched.tt?'<span class="net tt">TikTok</span>':''}</span></button>
+  ${open?`<div class="card" style="margin-top:6px"><div class="strip">${(m.media||[]).map((u,i)=>`<figure><img src="${esc(u)}" alt="" data-lbs="${p.key}" data-i="${i}"><figcaption>${i+1}/${m.media.length}</figcaption></figure>`).join('')}</div><pre style="white-space:pre-wrap;font:14px/1.5 inherit;margin:8px 0 0;background:var(--bg);border-radius:8px;padding:10px">${esc(m.text||'')}</pre>
+   <div class="resp" style="margin-top:8px"><textarea data-schednote="${p.key}" placeholder="Anything to change before it goes out? (I'll update it in Metricool)">${esc(note)}</textarea><span class="saved"></span></div></div>`:''}</div>`}).join(''):'<p class="empty">Nothing booked in Metricool right now.</p>';hydrate()}
+function renderPosted(){const P2=D.posts.filter(p=>p.status==='posted');$('#sum-posted').textContent=`${P2.length} gone out`;
+ $('#posted').innerHTML=P2.length?`<div class="sched">${P2.map(p=>`<div class="srow" style="cursor:default">${IMG(first(p.covers)?p.covers[first(p.covers)][0]:'')}<span class="t"><b>${esc(p.title)}</b><span>${esc(p.sched.ig&&p.sched.ig.date?p.sched.ig.date:'posted')}</span></span></div>`).join('')}</div>`:'<p class="empty">Nothing yet.</p>';hydrate()}
+function renderCal(){const items=[];sched().forEach(p=>{for(const net in p.sched)items.push({date:p.sched[net].date,net:net==='ig'?'ig':'tt',key:p.key,title:p.title,media:(p.sched[net].media||[])[0]})});
+ (D.others||[]).forEach(o=>items.push({date:o.date,net:o.network==='pinterest'?'pin':o.network==='instagram'?'ig':o.network==='tiktok'?'tt':'pin',title:o.title,media:(o.media||[])[0]}));
+ const today=new Date();today.setHours(0,0,0,0);const lastIG=items.filter(x=>x.net==='ig').map(x=>x.date).sort().pop();
+ const end=new Date(Math.max(today.getTime()+45*864e5,lastIG?new Date(lastIG).getTime()+14*864e5:0));
+ let m=new Date(today.getFullYear(),today.getMonth(),1);const months=[];while(m<=end){months.push(new Date(m));m=new Date(m.getFullYear(),m.getMonth()+1,1)}
+ const byDay={};items.forEach(x=>{const d=x.date.slice(0,10);(byDay[d]=byDay[d]||[]).push(x)});
+ const slotDays=(D.slots&&D.slots.days)||[3,0];
+ $('#cal').innerHTML=months.map(mo=>{const y=mo.getFullYear(),mi=mo.getMonth();const nd=new Date(y,mi+1,0).getDate();const pad=(mo.getDay()+6)%7;let cells='';
+  for(let i=0;i<pad;i++)cells+='<div class="day pad"></div>';
+  for(let d=1;d<=nd;d++){const dt=new Date(y,mi,d);const iso=lISO(dt);const its=byDay[iso]||[];const isPast=dt<today;const slot=slotDays.includes(dt.getDay());const hasIG=its.some(x=>x.net==='ig');
+   const gap=slot&&!hasIG&&!isPast&&(!lastIG||iso>lastIG.slice(0,10));const cover=its.find(x=>x.net==='ig'&&x.media);
+   cells+=`<div class="day ${its.length?'has':''} ${gap?'gap':''} ${isPast?'past':''} ${iso===lISO(today)?'today':''}" data-day="${iso}" title="${esc(its.map(x=>x.title).join(' · '))}">${cover?`<img src="${esc(cover.media)}" alt="">`:''}<span class="num">${d}</span><span class="dots">${its.slice(0,4).map(x=>`<i class="dot ${x.net}"></i>`).join('')}</span></div>`}
+  return `<div class="month"><h3>${mo.toLocaleDateString('en-GB',{month:'long',year:'numeric'})}</h3><div class="mg">${['Mo','Tu','We','Th','Fr','Sa','Su'].map(d=>`<div class="dn">${d}</div>`).join('')}${cells}</div></div>`}).join('');
+ const nIG=items.filter(x=>x.net==='ig'&&new Date(x.date)>=today).length;
+ $('#sum-cal').textContent=lastIG?`Instagram covered to ${fmtD(lastIG)}`:'nothing booked';
+ $('#status').innerHTML=lastIG?`<b>${nIG} Instagram post${nIG===1?'':'s'}</b> booked, covered to <b>${esc(fmtD(lastIG))}</b> · ${drafts().length} in the works`:`Nothing booked · ${drafts().length} in the works`;
+ window._calItems=byDay}
+function renderHeader(){$('#foot').textContent=`Built ${D.built.replace('T',' ')} · Metricool read ${(D.metricoolFetched||'').slice(0,16).replace('T',' ')} · ${D.eligibleCount} photos ready to use · this device: ${DEV}`;
+ $('#jump').innerHTML=[['pan-cal','Calendar'],['pan-sched','Scheduled'],['pan-posts','In the works'],['pan-covers','Covers of you'],['pan-posted','Posted']].map(([id,t])=>`<button class="chip" data-jump="${id}">${t}</button>`).join('')+'<button class="chip" data-foldall="1">Fold everything</button>'}
+/* ============ heroes ============ */
+function heroState(x){const v=(ST.heroes||{})[x[2]];const o=v&&typeof v==='object'?v:{};if(o.yes)return o.status==='ready'?'ready':'work';if(o.status==='parked')return 'parked';return x[3]==='new'?'decide':'parked'}
+function renderHeroes(){const s=ST.heroes||{};const get=x=>{const v=s[x[2]];return v&&typeof v==='object'?v:{}};
+ const older=x=>{const vs=x[4]||[];return vs.length?`<details class="fold"><summary style="font-size:12px">Earlier versions (${vs.length})</summary><div class="vgrid">${vs.map(o=>`<figure>${IMG(o[0],'data-rescue="1"')}<figcaption>${esc(o[1])}</figcaption></figure>`).join('')}</div></details>`:''};
+ const btn=(x,v,t,c)=>`<button class="chip ${c||''}" data-herostatus="${x[2]}" data-v="${v}">${t}</button>`;
+ const work=x=>{const v=get(x);return `<div class="hero picked">${IMG(x[0],'data-rescue="1"')}<span>${esc(x[1])}</span><textarea data-heronote="${x[2]}" placeholder="What to change next">${esc(v.note||'')}</textarea><div class="chips">${btn(x,'ready','✓ Ready to use')}${btn(x,'park','Put away')}</div>${doneHtml(v.done)}${older(x)}</div>`};
+ const decide=x=>`<div class="hero decide">${IMG(x[0],'data-rescue="1"')}<span>${esc(x[1])}</span><div class="chips">${btn(x,'work','Has legs','yes')}${btn(x,'park','Not for me')}</div>${older(x)}</div>`;
+ const small=(x,label,v)=>`<div class="hero">${IMG(x[0],'data-rescue="1"')}<span>${esc(x[1])}</span><div class="chips">${btn(x,v,label)}</div>${doneHtml(get(x).done)}${older(x)}</div>`;
+ const hs=D.heroes||[];const by=k=>hs.filter(x=>heroState(x)===k);const N=by('decide'),W=by('work'),R=by('ready'),Pk=by('parked');const grid=(a,f)=>`<div class="hgrid">${a.map(f).join('')}</div>`;
+ const pool=(D.eliPool||[]).filter(x=>!(s.pool||{})[x[2]]);
+ $('#heroes').innerHTML=(N.length?`<h3>Your call (${N.length})</h3>${grid(N,decide)}`:'')+(W.length?`<h3>Working on it (${W.length})</h3>${grid(W,work)}`:'')
+  +(R.length?`<details class="fold"><summary>Ready to use (${R.length})</summary>${grid(R,x=>small(x,'Back to working on it','work'))}</details>`:'')
+  +(Pk.length?`<details class="fold"><summary>Put away (${Pk.length}): bring one back any time</summary>${grid(Pk,x=>small(x,'Bring back','work'))}</details>`:'')
+  +(pool.length?`<details class="fold"><summary>Photos of you graded ★/Good that aren't covers yet (${pool.length})</summary><p class="hint">Tap <b>Make a cover</b> on any and I'll draft title ideas on it.</p><div class="hgrid">${pool.map(x=>`<div class="hero">${IMG(x[0],'data-rescue="1" data-big="'+esc(big(x[0]))+'"')}<span>${esc(x[1])}</span><div class="chips"><button class="chip yes" data-pool="${esc(x[2])}">Make a cover</button></div></div>`).join('')}</div></details>`:'');
+ const nD=N.length,nW=W.length;$('#sum-covers').textContent=[nD?`${nD} for your call`:'',nW?`${nW} in progress`:'',R.length?`${R.length} ready`:''].filter(Boolean).join(' · ')||'all decided';hydrate()}
+/* ============ send to Claude ============ */
+function summary(evs){const by={};evs.forEach(e=>{(by[e.post||'general']=by[e.post||'general']||[]).push(e)});const title=k=>{const p=D.posts.find(x=>x.key===k);return p?p.title:k};
+ return Object.entries(by).map(([k,es])=>`• ${title(k)}: ${es.map(e=>e.text).filter(Boolean).join('; ')}`).join('\n')}
+function updateSend(){const n=pending().length;$('#sendn').textContent=n;$('#sendbtn').disabled=!n;$('#sendbtn').querySelector('span').textContent=n?'Send to Claude':'Nothing to send'}
+$('#sendbtn').addEventListener('click',()=>{const evs=pending();if(!evs.length)return;const id=new Date().toISOString().slice(0,16).replace('T',' ');
+ const b={id,at:new Date().toISOString(),dev:DEV,n:evs.length,status:'sent',summary:summary(evs)};evs.forEach(e=>e.batch=id);ST.batches.push(b);DIRTY.add('events');dirty('batches');updateSend();
+ sheet(`<h3>Sent. Here's what I'll do</h3><pre>${esc(b.summary)}</pre><p class="hint">Saved to our shared notebook. I pick batches up automatically, or paste this line in our chat to get it done straight away:</p><pre>Apply my Post Studio batch ${esc(id)}</pre><button class="copy" data-copy="Apply my Post Studio batch ${esc(id)}">Copy that line</button><button class="chip" data-close="1" style="align-self:center">Close</button>`)});
+function sheet(html){$('#shc').innerHTML=html;$('#sheet').hidden=false}
+document.addEventListener('click',e=>{if(e.target.id==='sheet'||e.target.closest('[data-close]')){$('#sheet').hidden=true}
+ const c=e.target.closest('[data-copy]');if(c){navigator.clipboard&&navigator.clipboard.writeText(c.dataset.copy).then(()=>toast('Copied'))}});
+function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('on'),1600)}
+/* ============ clicks ============ */
+const OPEN=new Set((()=>{try{return JSON.parse(localStorage.getItem('ps.open')||'[]')}catch(e){return []}})());const saveOpen=()=>{try{localStorage.setItem('ps.open',JSON.stringify([...OPEN]))}catch(e){}};
+document.addEventListener('click',e=>{
+ const dp=e.target.closest('button[data-drop]');if(dp){const k=dp.dataset.post,id=dp.dataset.drop;const d=D.photos[id];
+  sheet(`<h3>Take this slide out?</h3><p class="hint">${esc(d?d.desc:id)}</p><button class="opt" data-dropwhy="post" data-post="${k}" data-id="${esc(id)}">Not for this post<small>It goes to the green box below, and stays available for other posts.</small></button><button class="opt" data-dropwhy="posted" data-post="${k}" data-id="${esc(id)}">Already posted<small>I'll mark it posted in your Photo Library. Never offered again.</small></button><button class="opt danger" data-dropwhy="never" data-post="${k}" data-id="${esc(id)}">Don't use this photo<small>I'll grade it Don't use in your Photo Library. Never offered again.</small></button><button class="chip" data-close="1" style="align-self:center">Cancel</button>`);return}
+ const dw=e.target.closest('[data-dropwhy]');if(dw){const k=dw.dataset.post,id=dw.dataset.id,why=dw.dataset.dropwhy;const d=D.photos[id];setP(k,s=>{s.drop={...(s.drop||{}),[id]:true}});
+  if(why!=='post'){ST.photoFlags[id]={flag:why,at:new Date().toISOString(),post:k};DIRTY.add('photoFlags')}
+  ev(k,'drop',{id,why},`${why==='post'?'Took out':why==='posted'?'Took out as ALREADY POSTED':"Took out as DON'T USE"}: ${d?d.desc:id}`);$('#sheet').hidden=true;render();return}
+ if(e.target.closest('#lbx')||e.target.id==='lb'){$('#lb').hidden=true;$('#lbc').innerHTML='';lb=null;return}
+ if(e.target.closest('#lbn')){if(lb&&lb.post){lb.i++;show()}return}if(e.target.closest('#lbp')){if(lb&&lb.post){lb.i--;show()}return}
+ const rs=e.target.closest('img[data-rescue]');if(rs){e.preventDefault();const src=rs.dataset.big||rs.getAttribute('src')||rs.dataset.src;mediaURL(rs.dataset.big||rs.dataset.src||src).then(u=>{$('#lbc').innerHTML=`<img src="${esc(u)}" alt="">`;$('#lbcap').textContent=rs.closest('label,.hero,figure')?.querySelector('span,figcaption')?.textContent||'';lb={post:null,i:0};$('#lb').hidden=false});return}
+ const sl=e.target.closest('.strip img[data-post],.strip video[data-post]');if(sl){lb={post:sl.dataset.post,i:+sl.dataset.i};show();return}
+ const ls=e.target.closest('img[data-lbs]');if(ls){const p=D.posts.find(x=>x.key===ls.dataset.lbs);const m=p.sched.ig||p.sched.tt;lb={post:null,i:0};$('#lbc').innerHTML=`<img src="${esc(m.media[+ls.dataset.i])}" alt="">`;$('#lbcap').textContent=p.title;$('#lb').hidden=false;return}
+ const so=e.target.closest('[data-sopen]');if(so){const k='sched:'+so.dataset.sopen;OPEN.has(k)?OPEN.delete(k):OPEN.add(k);saveOpen();renderSched();return}
+ const dy=e.target.closest('.day.has');if(dy){const its=(window._calItems||{})[dy.dataset.day]||[];const it=its.find(x=>x.key);if(it){OPEN.add('sched:'+it.key);saveOpen();renderSched();const el=document.querySelector(`[data-sopen="${it.key}"]`);if(el)el.scrollIntoView({behavior:'smooth',block:'center'})}else toast(its.map(x=>x.title).join(' · '));return}
+ const mv=e.target.closest('button[data-moving]');if(mv){const k=mv.dataset.moving;let on;setP(k,s=>{s.moving=!s.moving;on=s.moving;s.movingAt=s.moving?new Date().toISOString():null});ev(k,'moving',{on},on?'Wants the moving cover':'Back to the still cover');render();return}
+ const mr=e.target.closest('[data-more]');if(mr){SHOWN[mr.dataset.more]=(SHOWN[mr.dataset.more]||18)+24;render();return}
+ const sc=e.target.closest('[data-schedule],[data-capreset]');if(sc){if(sc.dataset.capreset){const k=sc.dataset.capreset;setP(k,s=>{s.caption=null});ev(k,'caption',{reset:true},'Caption back to my draft');render();return}
+  const k=sc.dataset.schedule;let on;setP(k,s=>{s.schedule=!s.schedule;on=s.schedule;s.scheduleAt=s.schedule?new Date().toISOString():null;if(s.schedule)s.stage='ready'});ev(k,'schedule',{on},on?'READY: schedule it in Metricool':'Un-ticked ready to schedule');render();return}
+ const hs=e.target.closest('button[data-herostatus]');if(hs){const k=hs.dataset.herostatus,v=hs.dataset.v;const s=ST.heroes={...(ST.heroes||{})};const cur=(s[k]&&typeof s[k]==='object')?s[k]:{};s[k]=v==='park'?{...cur,yes:false,status:'parked'}:{...cur,yes:true,status:v==='ready'?'ready':'working'};dirty('heroes');ev('covers','hero',{id:k,v},`Cover ${k}: ${v==='park'?'put away':v==='ready'?'ready to use':'has legs'}`);renderHeroes();return}
+ const pl=e.target.closest('[data-pool]');if(pl){const id=pl.dataset.pool;const s=ST.heroes={...(ST.heroes||{})};s.pool={...(s.pool||{}),[id]:true};dirty('heroes');const x=(D.eliPool||[]).find(y=>y[2]===id);ev('covers','newcover',{id},`Make a cover from: ${x?x[1]:id}`);renderHeroes();toast('Noted: I\'ll draft a cover on it');return}
+ const j=e.target.closest('[data-jump]');if(j){const t=document.getElementById(j.dataset.jump);if(t){if(t.tagName==='DETAILS')t.open=true;t.scrollIntoView({behavior:'smooth',block:'start'})}return}
+ if(e.target.closest('[data-foldall]')||e.target.closest('#foldposts')){const all=!!e.target.closest('[data-foldall]');document.querySelectorAll(all?'details.card,#grp-rest':'details.post').forEach(d=>d.open=false);return}
+ const b=e.target.closest('button[data-f]');if(!b)return;const k=b.dataset.post,f=b.dataset.f,v=b.dataset.v;const p=D.posts.find(x=>x.key===k);let nv;
+ setP(k,s=>{s[f]=(f==='verdict'||f==='ask'||f==='stage')&&s[f]===v?'':v;nv=s[f];
+  if(f==='ask'&&s.ask){const PH='[the description you pick goes here]';if(p&&!String(p.caption).includes(PH)){const cur=s.caption!=null?s.caption:p.caption;const i=cur.indexOf('\n\nComment');s.caption=s.ask+(i>=0?cur.slice(i):'')}
+   else if(p&&String(p.caption).includes(PH)){const cur=s.caption!=null?s.caption:p.caption;const prev=(p.ask&&p.ask.opts||[]).find(o=>cur.startsWith(o));if(cur.includes(PH)||prev)s.caption=p.caption.replace(PH,s.ask)}}});
+ const label={cover:`Cover: ${p&&p.covers[v]?p.covers[v][1]:v}`,verdict:nv==='yes'?'Looks good':nv==='change'?'Wants changes':'Cleared the verdict',stage:nv==='focus'?'⭐ Focus on this':nv==='ready'?'Marked ready':'Moved to later',ask:`Picked: ${nv}`,option:`Option: ${v}`}[f];
+ ev(k,f,{v:nv},label);render()});
+document.addEventListener('change',e=>{const t=e.target;
+ if(t.dataset.undrop){const k=t.dataset.post,id=t.dataset.undrop;setP(k,s=>{s.drop={...(s.drop||{}),[id]:false}});ev(k,'undrop',{id},`Put back: ${(D.photos[id]||{}).desc||id}`);render();return}
+ if(t.dataset.pick){const k=t.dataset.post,id=t.dataset.pick;setP(k,s=>{s.picks={...(s.picks||{}),[id]:t.checked}});ev(k,'pick',{id,on:t.checked},`${t.checked?'Ticked':'Un-ticked'}: ${(D.photos[id]||{}).desc||id}`);render()}});
+const timers={};
+document.addEventListener('input',e=>{const t=e.target;
+ if(t.dataset.pq){SHOWN[t.dataset.pq+':q']=t.value;clearTimeout(timers.q);timers.q=setTimeout(()=>{const pos=t.selectionStart;render();const n=document.querySelector(`[data-pq="${t.dataset.pq}"]`);if(n){n.focus();n.setSelectionRange(pos,pos)}},250);return}
+ if(t.dataset.cap){const k=t.dataset.cap;setP(k,s=>{s.caption=t.value});clearTimeout(timers['c'+k]);timers['c'+k]=setTimeout(()=>{if(!ST.events.some(x=>x.post===k&&x.kind==='caption'&&!x.batch))ev(k,'caption',{},'Edited the caption')},1500);return}
+ if(t.dataset.heronote){const s=ST.heroes={...(ST.heroes||{})};s[t.dataset.heronote]={...(s[t.dataset.heronote]||{yes:true}),note:t.value};dirty('heroes');clearTimeout(timers['h'+t.dataset.heronote]);timers['h'+t.dataset.heronote]=setTimeout(()=>{const ex=ST.events.find(x=>x.post==='covers'&&x.kind==='heronote'&&x.data.id===t.dataset.heronote&&!x.batch);if(ex){ex.text=`Cover ${t.dataset.heronote} note: ${t.value}`;ex.data.note=t.value}else ev('covers','heronote',{id:t.dataset.heronote,note:t.value},`Cover ${t.dataset.heronote} note: ${t.value}`)},1500);return}
+ if(t.dataset.schednote){const k=t.dataset.schednote;ST.schedNotes={...(ST.schedNotes||{}),[k]:t.value};dirty('schedNotes');clearTimeout(timers['s'+k]);timers['s'+k]=setTimeout(()=>{const ex=ST.events.find(x=>x.post===k&&x.kind==='schednote'&&!x.batch);if(ex){ex.text=`Change to the booked post: ${t.value}`;ex.data.note=t.value}else ev(k,'schednote',{note:t.value},`Change to the booked post: ${t.value}`)},1500);return}
+ if(t.dataset.post&&t.tagName==='TEXTAREA'){const k=t.dataset.post;setP(k,s=>{s.note=t.value});clearTimeout(timers['n'+k]);timers['n'+k]=setTimeout(()=>{const ex=ST.events.find(x=>x.post===k&&x.kind==='note'&&!x.batch);if(ex){ex.text=`Note: ${t.value}`;ex.data.note=t.value}else ev(k,'note',{note:t.value},`Note: ${t.value}`);updateSend()},1500)}});
+document.addEventListener('toggle',e=>{const d=e.target;if(!(d instanceof HTMLDetailsElement))return;if(d.matches('details.post')){const k='post:'+d.id;d.open?OPEN.add(k):OPEN.delete(k);saveOpen();if(d.open){initSort();hydrate(d)}}else if(d.id==='grp-rest'){d.open?OPEN.add('grp-rest'):OPEN.delete('grp-rest');saveOpen()}},true);
+/* lightbox */
+let lb=null;
+async function show(){const p=D.posts.find(x=>x.key===lb.post);const all=list(p,P(p.key));lb.i=(lb.i+all.length)%all.length;const x=all[lb.i];const u=await mediaURL(x.src);
+ $('#lbc').innerHTML=x.video?`<video src="${esc(u)}" muted loop autoplay playsinline controls></video>`:`<img src="${esc(u)}" alt="">`;$('#lbcap').textContent=`${lb.i+1}/${all.length}${x.id&&D.photos[x.id]?' · '+D.photos[x.id].desc:''}`;$('#lb').hidden=false}
+document.addEventListener('keydown',e=>{if(!lb)return;if(e.key==='Escape'){$('#lb').hidden=true;lb=null}if(lb.post&&e.key==='ArrowRight'){lb.i++;show()}if(lb.post&&e.key==='ArrowLeft'){lb.i--;show()}});
+</script>
+</body>
+</html>
